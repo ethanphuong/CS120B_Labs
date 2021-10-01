@@ -15,18 +15,19 @@
 int main(void) {
 	DDRA = 0x00; PORTA = 0xFF; 
 	DDRB = 0x00; PORTB = 0xFF;
-        DDRC = 0x00; PORTC = 0xFF;
+    DDRC = 0x00; PORTC = 0xFF;
 	DDRD = 0xFF; PORTD = 0x00;	
 	unsigned char tmpA = 0x00;
 	unsigned char tmpB = 0x00;
 	unsigned char tmpC = 0x00;
 	unsigned char tmpD = 0x00;
-	unsigned short total = 0x0000;
+	unsigned char total = 0x00;
 	while(1) {
 		
+		tmpA = tmpA & 0x00;
 		tmpB = PINA;
 		tmpC = PINB;
-		tmpD = PINC;
+		tmpD = PINC;	
 		total = tmpB + tmpC + tmpD;
 		
 		if (total > 0x8C) 
@@ -42,10 +43,8 @@ int main(void) {
 		{
 			tmpA = (tmpA | 0x02);
 		}
-		
-		total = total & 0x00FC;
 
-		tmpA = tmpA | total;
+		tmpA = ((total >> 2) & 0x3C) | tmpA;
 		
 	PORTD = tmpA;	
 	}
