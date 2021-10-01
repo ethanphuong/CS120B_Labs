@@ -16,11 +16,15 @@
 # altered in between executions (unless preconditions are used).
 tests = [ {'description': 'PINA: 0x00, PINB: 0x32, PINC: 0x64 => PORTD: 0x97',
     'steps': [ {'inputs': [('PINA',0x00), ('PINB',0x32), ('PINC',0x64)], 'iterations': 5 } ],
-    'expected': [('PORTD',0x97)],
+    'expected': [('PORTD',0x27)],
     },
     {'description': 'PINA: 0x0A, PINB: 0x1E, PINC: 0x96 => PORTC: 0xBF',
     'steps': [ {'inputs': [('PINA',0x0A), ('PINB',0x1E), ('PINC',0x96)], 'iterations': 5 } ],
-    'expected': [('PORTD',0xBF)],
+    'expected': [('PORTD',0x2F)],
+    },
+    {'description': 'PINA: 0x45, PINB: 0x45, PINC: 0x45 => PORTC: 0xBF',
+    'steps': [ {'inputs': [('PINA',0x45), ('PINB',0x45), ('PINC',0x45)], 'iterations': 5 } ],
+    'expected': [('PORTD',0x31)],
     },
     ]
 #watch = ['PORTB']
