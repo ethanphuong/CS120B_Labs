@@ -35,15 +35,14 @@ int main(void) {
 			cntavail = 0x01; 
 							 
 		}
-		else if ((tmpA == 0x0C) || (tmpA == 0x0A) || (tmpA == 0x09) || (tmpA == 0x05) || (tmpA == 0x03) || (tmpA = 0x06))
-		{
-			cntavail = 0x02;
-		}
 		else if ((tmpA == 0x08) || (tmpA == 0x04) || (tmpA == 0x02) || (tmpA == 0x01))
 		{
 			cntavail = 0x03;
 		}
-		
+		else if ((tmpA == 0x0C) || (tmpA == 0x0A) || (tmpA == 0x09) || (tmpA == 0x05) || (tmpA == 0x03) || (tmpA = 0x06))
+		{
+			cntavail = 0x02;
+		}
 	
 	PORTC = cntavail;	
 	}
