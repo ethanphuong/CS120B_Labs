@@ -22,6 +22,10 @@ int main(void) {
 		tmpA = PINA;
 		total = 0x00;
 		
+		if ((tmpA & 0x00) == 0x00)
+		{
+			total = (total | 0x40);
+		}
 		if (((tmpA & 0x01) == 0x01) || ((tmpA & 0x02) == 0x02))
 		{
 			total = (total | 0x60);
