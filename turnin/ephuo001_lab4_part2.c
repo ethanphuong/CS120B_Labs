@@ -75,16 +75,16 @@ void Tick_LoHi() {
 		SM1_STATE = SM1_first;
 		break;
       	case SM1_bothPress:
-		if ((PINA & 0x03) == 0x03)
-		{
-            		SM1_STATE = SM1_bothPress;
-		}
-		else
-		{
-			SM1_STATE = SM1_nonePressed;
-		}
-        	break;
-   	}
+	if ((PINA & 0x03) == 0x03)
+	{
+            	SM1_STATE = SM1_bothPress;
+	}
+	else
+	{
+		SM1_STATE = SM1_nonePressed;
+	}
+        break;
+   }
    switch(SM1_STATE) { 
       case SM1_SMStart:
          PORTC = 0x07;
@@ -95,15 +95,15 @@ void Tick_LoHi() {
       case SM1_first:
          
          break;
-	  case SM1_firstPress:
-	  if (PORTC <= 0x08)
+      case SM1_firstPress:
+	 if (PORTC <= 0x08)
 	 {
-		 PORTC++;
+	 	PORTC++;
 	 }
       case SM1_second:
 	
-		break;
-	case SM1_secondPress:
+	break;
+      case SM1_secondPress:
 	if (PORTC > 0x01)
 	 {
 		 PORTC--;
