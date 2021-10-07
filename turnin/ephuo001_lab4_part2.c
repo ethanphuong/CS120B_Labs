@@ -1,3 +1,4 @@
+
 /*	Your Name & E-mail: Ethan Phuong ephuo001@ucr.edu
  *	Lab Section: 23
  *	Assignment: Lab 3  Exercise 1 
@@ -14,7 +15,7 @@
 #endif
 int main(void) {
 	DDRA = 0x00; PORTA = 0xFF; 
-    	DDRB = 0xFF; PORTB = 0x07;
+    	DDRC = 0xFF; PORTC = 0x07;
 	while(1)
 	{
 		Tick_LoHi();
@@ -22,82 +23,97 @@ int main(void) {
 	return 1;
 }
 
-enum SM1_STATES { SM1_SMStart, SM1_nonePresse, SM1_firstPress, SM1_secndPress, SM1_bothPress} SM1_STATE;
+enum SM1_STATES { SM1_SMStart, SM1_nonePressed, SM1_first, SM1_second, SM1_bothPress, SM1_firstPress, SM1_secondPress} SM1_STATE;
 void Tick_LoHi() { 
    switch(SM1_STATE) { 
       case SM1_SMStart:
          if (1) {
-            SM1_STATE = SM1_nonePresse;
+            	SM1_STATE = SM1_nonePressed;
          }
          break;
-      case SM1_nonePresse:
-         if (((PINA & 0x00) == 0x00) && ((PINA & 0x01) != 0x01)) {
-            SM1_STATE = SM1_firstPress;
+      case SM1_nonePressed:
+         if (((PINA & 0x01) == 0x01) && ((PINA & 0x02) != 0x02)) {
+            	SM1_STATE = SM1_firstPress;
          }
-         else if (((PINA & 0x00) != 0x00) && ((PINA & 0x01) == 0x01)) {
-            SM1_STATE = SM1_secndPress;
+         else if (((PINA & 0x01) != 0x01) && ((PINA & 0x02) == 0x02)) {
+            	SM1_STATE = SM1_secondPress;
          }
-         else if (((PINA & 0x00) == 0x00) && ((PINA & 0x01) == 0x01)) {
-            SM1_STATE = SM1_bothPress;
+         else if ((PINA & 0x03) == 0x03) {
+            	SM1_STATE = SM1_bothPress;
          }
          else {
-            SM1_STATE = SM1_nonePresse;
+            	SM1_STATE = SM1_nonePressed;
          }
          break;
-      case SM1_firstPress:
-         if (((PINA & 0x00) == 0x00) && ((PINA & 0x01) != 0x01)) {
-            SM1_STATE = SM1_firstPress;
+      case SM1_first:
+         if (((PINA & 0x01) == 0x01) && ((PINA & 0x02) != 0x02)) {
+            	SM1_STATE = SM1_first;
          }
-         else if ((PINA & 0x01) == 0x01) {
-            SM1_STATE = SM1_bothPress;
+         else if ((PINA & 0x02) == 0x02) {
+            	SM1_STATE = SM1_bothPress;
          }
          else {
-            SM1_STATE = SM1_firstPress;
+            	SM1_STATE = SM1_nonePressed;
          }
          break;
-      case SM1_secndPress:
-         if (((PINA & 0x00) != 0x00) && ((PINA & 0x01) == 0x01)) {
-            SM1_STATE = SM1_secndPress;
-         }
-         else if ((PINA & 0x00) == 0x00) 
-	 {
-            SM1_STATE = SM1_bothPress;
-         }
-         break;
-      case SM1_bothPress:
-            SM1_STATE = SM1_bothPress;
-         break;
-      default:
-         SM1_STATE = SM1_nonePresse;
-         break;
-   }
+      case SM1_second:
+        if (((PINA & 0x01) != 0x01) && ((PINA & 0x02) == 0x02)) {
+        	SM1_STATE = SM1_second;
+        }
+        else if ((PINA & 0x01) == 0x01) 
+	{
+            	SM1_STATE = SM1_bothPress;
+	}
+	else {
+		SM1_STATE = SM1_nonePressed;
+	}
+        break;
+	case SM1_secondPress:
+		SM1_STATE = SM1_second;
+		break;
+	case SM1_firstPress:
+		SM1_STATE = SM1_first;
+		break;
+      	case SM1_bothPress:
+		if ((PINA & 0x03) == 0x03)
+		{
+            		SM1_STATE = SM1_bothPress;
+		}
+		else
+		{
+			SM1_STATE = SM1_nonePressed;
+		}
+        	break;
+   	}
    switch(SM1_STATE) { 
       case SM1_SMStart:
+         PORTC = 0x07;
+         break;
+      case SM1_nonePressed:
          
          break;
-      case SM1_nonePresse:
-         PORTB = 0x07;
+      case SM1_first:
+         
          break;
-      case SM1_firstPress:
-         if (PORTB <= 0x08)
+	  case SM1_firstPress:
+	  if (PORTC <= 0x08)
 	 {
-		 PORTB++;
+		 PORTC++;
 	 }
-         break;
-      case SM1_secndPress:
-	if (PORTB >= 0x01)
+      case SM1_second:
+	
+		break;
+	case SM1_secondPress:
+	if (PORTC > 0x01)
 	 {
-		 PORTB--;
+		 PORTC--;
 	 }
-	break;
+	 break;
       case SM1_bothPress:
-         PORTB = 0x00;
+         PORTC = 0x00;
          break;
    }
 }
-
-
-
 
 
 
