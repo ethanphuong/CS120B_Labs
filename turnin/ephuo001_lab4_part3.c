@@ -1,4 +1,3 @@
-
 /*	Your Name & E-mail: Ethan Phuong ephuo001@ucr.edu
  *	Lab Section: 23
  *	Assignment: Lab 3  Exercise 1 
@@ -36,13 +35,13 @@ void Tick_LoHi() {
          }
          break;
       case SM1_Locked:
-         if (PIN_A0 & !PIN_A1 & PIN_A2) {
+         if ((PIN_A0 == 0x01) & !(PIN_A1 == 0x02) & !(PIN_A2 == 0x04)) {
             	SM1_STATE = SM1_pressX;
          }
-         else if (!PIN_A0 & PIN_A1 & !PIN_A2) {
+         else if (!(PIN_A0 == 0x01) & (PIN_A1 == 0x01) & !(PIN_A2 == 0x04)) {
             	SM1_STATE = SM1_pressY;
          }
-         else if (!PIN_A0 & !PIN_A1 & PIN_A2) {
+         else if (!(PIN_A0 == 0x01) & !(PIN_A1 == 0x02) & (PIN_A2 == 0x04)) {
             	SM1_STATE = SM1_pressPound;
          }
 	 else if (locked)
@@ -60,7 +59,7 @@ void Tick_LoHi() {
 	 SM1_STATE = SM1_Locked;
          break;
       case SM1_pressPound:
-	 if (!PIN_A0 & !PIN_A1 & !PIN_A2)
+	 if (!(PIN_A0 == 0x01) & !(PIN_A1 == 0x02) & !(PIN_A2 == 0x04))
 	 {
 	 	SM1_STATE = SM1_YAfterPound;
 	 }
@@ -70,6 +69,14 @@ void Tick_LoHi() {
 	 }
 	 break;
       case SM1_YAfterPound:
+	  if (!(PIN_A0 == 0x01) & (PIN_A1 == 0x02) & !(PIN_A2 == 0x04))
+	  {
+		  SM1_STATE = SM1_YAfterPound;
+	  }
+	  else
+	  {
+		  SM1_STATE = SM1_Locked;
+	  }
      	 break;
       case SM1_AutoLock:
      	 break;
@@ -98,21 +105,6 @@ void Tick_LoHi() {
 	 break;
    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
