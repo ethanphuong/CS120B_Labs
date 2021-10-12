@@ -13,26 +13,12 @@
 #include "simAVRHeader.h"
 #endif
 int main(void) {
-	DDRA = 0x00; PORTA = 0xFF;
-        DDRB = 0xFF; PORTB = 0x00;	
-    	DDRC = 0xFF; PORTC = 0x00;	
-	unsigned char tmpA = 0x00;
+        DDRB = 0xFF; PORTB = 0x00;
 	while(1) {
-		
-		tmpA = PINA;
-
-		PORTB = ((tmpA >> 4) & 0x0F);
-		PORTC = ((tmpA << 4) & 0xF0);
+		PORTB = 0x0F;	
 	}
 	return 0;
 }
-
-
-
-
-
-
-
 
 
 
