@@ -19,7 +19,7 @@ int main(void) {
 	unsigned char total = 0x00;
 	while(1) {
 		
-		tmpA = PINA;
+		~tmpA = PINA;
 		total = 0x00;
 		
 		if ((tmpA & 0x00) == 0x00)
