@@ -31,13 +31,13 @@ void Tick_LoHi() {
          }
          break;
       case SM1_nonePressed:
-         if (((PINA & 0x01) == 0x01) && ((PINA & 0x02) != 0x02)) {
+         if (((~PINA & 0x01) == 0x01) && ((~PINA & 0x02) != 0x02)) {
             	SM1_STATE = SM1_firstPress;
          }
-         else if (((PINA & 0x01) != 0x01) && ((PINA & 0x02) == 0x02)) {
+         else if (((~PINA & 0x01) != 0x01) && ((~PINA & 0x02) == 0x02)) {
             	SM1_STATE = SM1_secondPress;
          }
-         else if ((PINA & 0x03) == 0x03) {
+         else if ((~PINA & 0x03) == 0x03) {
             	SM1_STATE = SM1_bothPress;
          }
          else {
@@ -45,10 +45,10 @@ void Tick_LoHi() {
          }
          break;
       case SM1_first:
-         if (((PINA & 0x01) == 0x01) && ((PINA & 0x02) != 0x02)) {
+         if (((~PINA & 0x01) == 0x01) && ((~PINA & 0x02) != 0x02)) {
             	SM1_STATE = SM1_first;
          }
-         else if ((PINA & 0x02) == 0x02) {
+         else if ((~PINA & 0x02) == 0x02) {
             	SM1_STATE = SM1_bothPress;
          }
          else {
@@ -56,10 +56,10 @@ void Tick_LoHi() {
          }
          break;
       case SM1_second:
-        if (((PINA & 0x01) != 0x01) && ((PINA & 0x02) == 0x02)) {
+        if (((~PINA & 0x01) != 0x01) && ((~PINA & 0x02) == 0x02)) {
         	SM1_STATE = SM1_second;
         }
-        else if ((PINA & 0x01) == 0x01) 
+        else if ((~PINA & 0x01) == 0x01) 
 	{
             	SM1_STATE = SM1_bothPress;
 	}
