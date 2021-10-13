@@ -28,7 +28,7 @@ enum SM1_STATES{SM1_SMStart, SM1_zeroLight, SM1_oneLight, SM1_twoLight, SM1_thre
 void Tick_LoHi() {
   switch(SM1_STATE) { 
     case SM1_SMStart:
-    SM1_STATE = SM1_zeroLight;
+      SM1_STATE = SM1_zeroLight;
     break;
     case SM1_zeroLight:
     if ((~PINA & 0x01) == 0x01) {
