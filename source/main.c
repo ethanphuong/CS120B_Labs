@@ -1,6 +1,6 @@
 /*	Your Name & E-mail: Ethan Phuong ephuo001@ucr.edu
  *	Lab Section: 23
- *	Assignment: Lab 6  Exercise 1
+ *	Assignment: Lab 6  Exercise 2
  *	Exercise Description: [optional - include for your own benefit]
  *	
  *	I acknowledge all content contained herein, excluding template or example

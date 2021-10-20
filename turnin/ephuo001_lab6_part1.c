@@ -1,12 +1,12 @@
 /*	Your Name & E-mail: Ethan Phuong ephuo001@ucr.edu
  *	Lab Section: 23
- *	Assignment: Lab 6  Exercise 1
+ *	Assignment: Lab 6  Exercise 2
  *	Exercise Description: [optional - include for your own benefit]
  *	
  *	I acknowledge all content contained herein, excluding template or example
  *	code, is my own original work.
  *
- *	Demo Link: https://youtu.be/_8FW3p1dWDg
+ *	Demo Link: https://youtu.be/phgJ6tUA4ks
  */
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -50,20 +50,68 @@ void TimerSet(unsigned long M) {
 	_avr_timer_cntcurr = _avr_timer_M;
 }
 
-enum SM_STATES {SM1_SMStart, SM_FirstLed, SM_SecondLed, SM_ThirdLed} SM_STATE;
+enum SM_STATES {SM1_SMStart, SM_FirstLed, SM_SecondLed, SM_ThirdLed, SM_Stop} SM_STATE;
+
+unsigned char whichLight = 0;
+unsigned char afterThree = 0;
+
 void Tick_LoHi() {
 	switch(SM_STATE) {
 	   case SM1_SMStart:
 	      SM_STATE = SM_FirstLed;
 	      break;
 	   case SM_FirstLed:
-	      SM_STATE = SM_SecondLed;
+	      if (~PINA & 0x01) {
+		 SM_STATE = SM_Stop;
+	      }
+	      else {
+	         SM_STATE = SM_SecondLed;
+	      }
 	      break;
 	   case SM_SecondLed:
-	      SM_STATE = SM_ThirdLed;
+	      if (~PINA & 0x01) {
+		 SM_STATE = SM_Stop;
+	      }
+	      else if (afterThree != 0)
+	      {
+		 afterThree = 0;
+		 SM_STATE = SM_FirstLed;
+	      }
+	      else
+	      {
+	         SM_STATE = SM_ThirdLed;
+	      }
 	      break;
 	   case SM_ThirdLed:
-	      SM_STATE = SM_FirstLed;
+	      if (~PINA & 0x01) {
+		 SM_STATE = SM_Stop;
+	      }
+	      else
+	      {
+		 afterThree = 1;
+	         SM_STATE = SM_SecondLed;
+	      }
+	      break;
+	   case SM_Stop:
+	      if (!(~PINA & 0x01))
+	      {
+	         if (whichLight == 0x01)
+		 {
+	 	    PORTB = 0x01;
+		 }
+		 else if (whichLight == 0x02)
+		 {
+		    PORTB = 0x02;
+		 }
+		 else
+		 {
+		    PORTB = 0x04;
+		 }
+	      }
+	      else
+	      {
+	         SM_STATE = SM1_SMStart;
+	      }
 	      break;
 	   default:
 	      SM_STATE = SM1_SMStart;
@@ -76,12 +124,17 @@ void Tick_LoHi() {
 	      break;
 	   case SM_FirstLed:
 	      PORTB = 0x01;
+	      whichLight = 0x01;
 	      break;
 	   case SM_SecondLed:
 	      PORTB = 0x02;
+	      whichLight = 0x02;
 	      break;
 	   case SM_ThirdLed:
 	      PORTB = 0x04;
+	      whichLight = 0x03;
+	      break;
+	   case SM_Stop:
 	      break;
 	   default:
 	      break;
@@ -89,9 +142,11 @@ void Tick_LoHi() {
 }
 
 void main() {
+
+	DDRA = 0x00; PORTA = 0xFF;
 	DDRB = 0xFF; PORTB = 0x00;
 	
-	TimerSet(1000);
+	TimerSet(250);
 	TimerOn();
 
 	SM_STATE = SM1_SMStart;
