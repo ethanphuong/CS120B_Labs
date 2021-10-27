@@ -1,12 +1,12 @@
 /*	Your Name & E-mail: Ethan Phuong ephuo001@ucr.edu
  *	Lab Section: 23
- *	Assignment: Lab 7  Exercise 2
+ *	Assignment: Lab 8  Exercise 1
  *	Exercise Description: [optional - include for your own benefit]
  *	
  *	I acknowledge all content contained herein, excluding template or example
  *	code, is my own original work.
  *
- *	Demo Link: https://youtu.be/Hn3Tc_939TE
+ *	Demo Link: https://youtu.be/vEeCda0RLNk
  */
 #include <avr/io.h>
 #include <avr/interrupt.h>
