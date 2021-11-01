@@ -74,77 +74,113 @@ void PWM_off() {
 	TCCR3B = 0x00;
 }
 
-enum SM_STATES {SM1_SMStart, SM_On, SM_Off} SM_STATE;
-
-double notes[24] = {261.63, 293.66, 329.63, 293.66, 329.63, 329.63, 440.00, 392.00, 261.63, 261.63, 261.63, 261.63, 392.00, 349.23, 329.63, 329.63, 329.63, 349.23, 329.63, 293.66, 261.63, 293.66, 293.66, 261.63};
-
-double times[24] = {3, 3, 3, 2, 2, 2, 3, 2, 4, 2, 2, 2, 3, 3, 4, 2, 2, 3, 3, 3, 4, 3, 3, 3};
-
-int count = 0;
-
-void Tick_LoHi() {
-	switch(SM_STATE) {
-	   case SM1_SMStart:
-	      if (~PINA & 0x01)
-	      {
-		 SM_STATE = SM_On;
-	      }
-	      else
-	      {
-		 SM_STATE = SM1_SMStart;
-	      }
-	      break;
-	   case SM_On:
-	      if (count > 0x17)
-	      {
-	         SM_STATE = SM_Off;
-	      }
-	      else
-	      {
-		 for (int i = 0; i < (times[count]); i++)
-		 {	 
-	      	    set_PWM(notes[count]);
-		 }
-		 count++; 
-		 SM_STATE = SM_On;
-	      }
-	      break;
-	   case SM_Off:
-	      SM_STATE = SM1_SMStart;
-	      break;
-	   default:
-	      SM_STATE = SM1_SMStart;
-	      break;
-	}
-
-	switch(SM_STATE) {
-	   case SM1_SMStart:
-	      set_PWM(0);
-	      count = 0;
-	      break;
-	   case SM_On:
-	      break;
-	   case SM_Off:
-	      break;
-	   default:
-	      break;
-	}
+enum SM_STATES {SM1_SMStart, SM_BitOne, SM_BitTwo, SM_BitThree} SM_STATE;
+unsigned char threeLEDs = 0x00;
+void ThreeLEDsSM() {
+    switch (SM_STATE) {
+       case SM1_SMStart:
+          SM_STATE = SM_BitOne;
+	  break;
+       case SM_BitOne:
+	  SM_STATE = SM_BitTwo;
+	  break;
+       case SM_BitTwo:
+	  SM_STATE = SM_BitThree;
+	  break;
+       case SM_BitThree:
+	  SM_STATE = SM_BitOne;
+	  break;
+       default:
+	  SM_STATE = SM1_SMStart;
+	  break;
+    }
+    switch (SM_STATE) {
+       case SM1_SMStart:
+          break;
+       case SM_BitOne:
+	  threeLEDs = 0x01;
+          break;
+       case SM_BitTwo:
+	  threeLEDs = 0x02;
+          break;
+       case SM_BitThree:
+	  threeLEDs = 0x04;
+          break;
+       default:
+	  break;
+    }
 }
 
+enum SM2_STATES {SM2_SMStart, SM2_BitThreeOff, SM2_BitThreeOn} SM2_STATE;
+unsigned char blinkingLED = 0x00;
+void BlinkingLEDSM() {
+    switch (SM2_STATE) {
+       case SM2_SMStart:
+          SM2_STATE = SM2_BitThreeOn;
+	  break;
+       case SM2_BitThreeOn:
+	  SM2_STATE = SM2_BitThreeOff;
+	  break;
+       case SM2_BitThreeOff:
+	  SM2_STATE = SM2_BitThreeOn;
+	  break;
+       default:
+	  SM2_STATE = SM2_SMStart;
+	  break;
+    }
+    switch (SM2_STATE) {
+       case SM2_SMStart:
+          break;
+       case SM2_BitThreeOn:
+	  blinkingLED = 0x08;
+          break;
+       case SM2_BitThreeOff:
+	  blinkingLED = 0x00;
+          break;
+       default:
+	  break;
+    }
+}
+
+enum SM3_STATES {SM3_SMStart, SM3_SMOn} SM3_STATE;
+void CombineLEDsSM() {
+    switch (SM3_STATE) {
+       case SM3_SMStart:
+          SM2_STATE = SM3_SMOn;
+	  break;
+       case SM3_SMOn:
+	  SM3_STATE = SM3_SMOn;
+	  break;
+       default:
+	  SM3_STATE = SM3_SMStart;
+	  break;
+    }
+    switch (SM3_STATE) {
+       case SM3_SMStart:
+          break;
+       case SM3_SMOn:
+	  PORTB = (threeLEDs);
+          break;
+       default:
+	  break;
+    }
+}
 void main() {
 
 	DDRA = 0x00; PORTA = 0xFF;
 	DDRB = 0xFF; PORTB = 0x00;
 
-	TimerSet(200);
+	TimerSet(1000);
 	TimerOn();
-	
-	PWM_on();
 
 	SM_STATE = SM1_SMStart;
+	SM2_STATE = SM2_SMStart;
+	SM3_STATE = SM3_SMStart;
 
 	while(1) {
-		Tick_LoHi();
+		ThreeLEDsSM();
+		BlinkingLEDSM();
+		CombineLEDsSM();
 		while (!TimerFlag);
 		TimerFlag = 0;
 	}
