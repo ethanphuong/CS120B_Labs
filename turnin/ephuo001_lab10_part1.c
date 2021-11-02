@@ -181,7 +181,7 @@ void main() {
 		ThreeLEDsSM();
 		BlinkingLEDSM();
 		CombineLEDsSM();
-		while (!TimerFlag);
+		while (!TimerFlag);	
 		TimerFlag = 0;
 	}
 }
