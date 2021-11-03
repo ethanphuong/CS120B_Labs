@@ -142,6 +142,51 @@ void BlinkingLEDSM() {
     }
 }
 
+enum SM4_STATES {SM4_SMStart, SM4_On, SM4_Off} SM4_STATE;
+unsigned char speakerSound = 0x00;
+void SpeakerSM() {
+    switch (SM4_STATE) {
+       case SM4_SMStart:
+          SM4_STATE = SM4_Off;
+	  break;
+       case SM4_Off:
+	  if ((~PINA & 0x04) == 0x04)
+	  {
+	     SM4_STATE = SM4_On;
+	  }
+	  else
+	  {
+	     SM4_STATE = SM4_Off;
+	  }
+	  break;
+       case SM4_On:
+	  if ((~PINA & 0x04) != 0x04)
+	  {
+	     SM4_STATE = SM4_Off;
+	  }
+	  else
+	  {
+	     SM4_STATE = SM4_On;
+	  }
+	  break;
+       default:
+	  SM4_STATE = SM4_SMStart;
+	  break;
+    }
+    switch (SM4_STATE) {
+       case SM4_SMStart:
+          break;
+       case SM4_Off:
+	  speakerSound = 0x00;
+          break;
+       case SM4_On:
+	  speakerSound = 0x10;
+          break;
+       default:
+	  break;
+    }
+}
+
 enum SM3_STATES {SM3_SMStart, SM3_SMOn} SM3_STATE;
 void CombineLEDsSM() {
     switch (SM3_STATE) {
@@ -159,7 +204,7 @@ void CombineLEDsSM() {
        case SM3_SMStart:
           break;
        case SM3_SMOn:
-	  PORTB = (threeLEDs | blinkingLED);
+	  PORTB = (threeLEDs | blinkingLED) | speakerSound;
           break;
        default:
 	  break;
@@ -180,6 +225,7 @@ void main() {
 	SM_STATE = SM1_SMStart;
 	SM2_STATE = SM2_SMStart;
 	SM3_STATE = SM3_SMStart;
+	SM4_STATE = SM4_SMStart;
 
 	while(1) {
 		if ((i % 300) == 0x00)
@@ -193,6 +239,7 @@ void main() {
 		   BlinkingLEDSM();
 		   j = 0x00;
 		}
+		SpeakerSM();
 		CombineLEDsSM();
 		while (!TimerFlag){};
 		TimerFlag = 0;
