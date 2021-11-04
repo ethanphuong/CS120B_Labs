@@ -118,18 +118,27 @@ void BlinkingLEDSM() {
     }
 }
 
-enum SM4_STATES {SM4_SMStart, SM4_On, SM4_Off} SM4_STATE;
+enum SM4_STATES {SM4_SMStart, SM4_On, SM4_Off, SM4_Up, SM4_Down} SM4_STATE;
 unsigned char speakerSound = 0x00;
 unsigned char count = 0x00;
+unsigned char freq = 0x00;
 void SpeakerSM() {
     switch (SM4_STATE) {
        case SM4_SMStart:
           SM4_STATE = SM4_Off;
 	  break;
        case SM4_Off:
-	  if (((~PINA & 0x04) == 0x04) && (count > 1))
+	  if (((~PINA & 0x04) == 0x04) && (count > freq))
 	  {
 	     SM4_STATE = SM4_On;
+	  }
+	  else if ((~PINA & 0x02) == 0x02)
+	  {
+	     SM4_STATE = SM4_Up;
+	  }
+	  else if ((~PINA & 0x01) == 0x01)
+	  {
+	     SM4_STATE = SM4_Down;
 	  }
 	  else
 	  {
@@ -139,6 +148,17 @@ void SpeakerSM() {
 	  break;
        case SM4_On:
 	  count = 0;
+	  SM4_STATE = SM4_Off;
+	  break;
+       case SM4_Up:
+	  if (freq > 0)
+	  { 
+	     freq--;
+	  }
+	  SM4_STATE = SM4_Off;
+	  break;
+       case SM4_Down:
+	  freq++;
 	  SM4_STATE = SM4_Off;
 	  break;
        default:
@@ -154,6 +174,10 @@ void SpeakerSM() {
        case SM4_On:
 	  speakerSound = 0x10;
           break;
+       case SM4_Up:
+	  break;
+       case SM4_Down:
+	  break;
        default:
 	  break;
     }
@@ -213,12 +237,7 @@ void main() {
 		   j = 0x00;
 		}
 
-		if ((k % 2) == 0x00)
-		{
-		   SpeakerSM();
-		   k = 0x00;
-		}
-
+		SpeakerSM();
 		CombineLEDsSM();
 		while (!TimerFlag){};
 		TimerFlag = 0;
