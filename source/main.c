@@ -19,89 +19,49 @@
 #endif
 
 enum SM_STATES {SM1_SMStart, SM_Change} SM_STATE;
-unsigned char x;
+unsigned char x[] = "CS120B is Legend... wait for it Dary!";
+unsigned char screen[37];
 void Tick_LoHi() {
-	x = GetKeypadKey();
-	switch (SM_STATE) {
-		case SM1_SMStart:
-		   SM_STATE = SM_Change;
-		   break;
-		case SM_Change:
-		   SM_STATE = SM_Change;
-		   break;
-		default:
-		   SM_STATE = SM1_SMStart;
-		   break;
+	switch(SM_STATE)
+	{
+	   case SM1_SMStart:
+              if((~PINA & 0x01) == 0x01)
+	      {
+	         SM_STATE = SM_Change;
+	      }
+	      else
+	      {
+		 SM_STATE = SM1_SMStart;
+	      }
+	      break;
+	   case SM_Change:
+	      SM_STATE = SM_Change;
+	      break;
+	   default:
+	      SM_STATE = SM1_SMStart;
+	      break;
 	}
-	switch (SM_STATE) {
-		case SM1_SMStart:
-		   break;
-		case SM_Change:
-		   switch(x) {
-		      case '\0':
-		         PORTB = 0x1F;
-		         break;
-		      case '0':
-		         PORTB = 0x00;
-		         break;
-		      case '1':
-		         PORTB = 0x01;
-		         break;
-		      case '2':
-		         PORTB = 0x02;
-		         break;
-		      case '3':
-		         PORTB = 0x03;
-		         break;
-		      case '4':
-		         PORTB = 0x04;
-		         break;
-		      case '5':
-		         PORTB = 0x05;
-		         break;
-		      case '6':
-		         PORTB = 0x06;
-		         break;
-		      case '7':
-		         PORTB = 0x07;
-		         break;
-		      case '8':
-		         PORTB = 0x08;
-		         break;
-		      case '9':
-		         PORTB = 0x09;
-		         break;
-		      case 'A':
-		         PORTB = 0x0A;
-		         break;
-		      case 'B':
-		         PORTB = 0x0B;
-		         break;
-		      case 'C':
-		         PORTB = 0x0C;
-		         break;
-		      case 'D':
-		         PORTB = 0x0D;
-		         break;
-		      case '*':
-		         PORTB = 0x0E;
-		         break;
-		      case '#':
-		         PORTB = 0x0F;
-		         break;
-	 	      default:
-		         PORTB = 0x1B;
-		         break;
-		   }
-		   break;
-		default:
-		   break;
+	switch(SM_STATE)
+	{
+	   case SM1_SMStart:
+	      break;
+	   case SM_Change:
+	      for (unsigned int i = 0; i < 37; i++)
+	      {
+	         screen[i] = x[i];
+	      }
+	      LCD_DisplayString(1, screen);
+	      break;
+	   default:
+	      break;
 	}
 }
 
 int main() {
+	DDRA = 0x00; PORTA = 0xFF;
 	DDRB = 0xFF; PORTB = 0x00;
 	DDRC = 0xF0; PORTC = 0x0F;
+	DDRD = 0xFF; PORTD = 0x00;
 
 	static task task1, task2, task3, task4;
 	task *tasks[] = { &task1, &task2, &task3, &task4 };
