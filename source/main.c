@@ -93,13 +93,15 @@ void Tick_LoHi() {
 		         PORTB = 0x1B;
 		         break;
 		   }
+		   break;
+		default:
+		   break;
 	}
 }
 
-
 int main() {
-	DDRA = 0x00; PORTA = 0xFF;
 	DDRB = 0xFF; PORTB = 0x00;
+	DDRC = 0xF0; PORTC = 0x0F;
 
 	static task task1, task2, task3, task4;
 	task *tasks[] = { &task1, &task2, &task3, &task4 };
