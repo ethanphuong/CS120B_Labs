@@ -9,10 +9,10 @@
           
 /*-------------------------------------------------------------------------*/
 
-#define DATA_BUS PORTC        // port connected to pins 7-14 of LCD display
-#define CONTROL_BUS PORTD    // port connected to pins 4 and 6 of LCD disp.
-#define RS 6            // pin number of uC connected to pin 4 of LCD disp.
-#define E 7            // pin number of uC connected to pin 6 of LCD disp.
+#define DATA_BUS PORTD		// port connected to pins 7-14 of LCD display
+#define CONTROL_BUS PORTB	// port connected to pins 4 and 6 of LCD disp.
+#define RS 6			// pin number of uC connected to pin 4 of LCD disp.
+#define E 7			// pin number of uC connected to pin 6 of LCD disp.
 
 /*-------------------------------------------------------------------------*/
 
@@ -23,12 +23,12 @@ void LCD_ClearScreen(void) {
 void LCD_init(void) {
 
     //wait for 100 ms.
-    delay_ms(100);
-    LCD_WriteCommand(0x38);
-    LCD_WriteCommand(0x06);
-    LCD_WriteCommand(0x0f);
-    LCD_WriteCommand(0x01);
-    delay_ms(10);                         
+	delay_ms(100);
+	LCD_WriteCommand(0x38);
+	LCD_WriteCommand(0x06);
+	LCD_WriteCommand(0x0f);
+	LCD_WriteCommand(0x01);
+	delay_ms(10);						 
 }
 
 void LCD_WriteCommand (unsigned char Command) {
@@ -60,11 +60,11 @@ void LCD_DisplayString( unsigned char column, const unsigned char* string) {
 
 void LCD_Cursor(unsigned char column) {
    if ( column < 17 ) { // 16x1 LCD: column < 9
-                        // 16x2 LCD: column < 17
+						// 16x2 LCD: column < 17
       LCD_WriteCommand(0x80 + column - 1);
    } else {
-      LCD_WriteCommand(0xB8 + column - 9);    // 16x1 LCD: column - 1
-                                            // 16x2 LCD: column - 9
+      LCD_WriteCommand(0xB8 + column - 9);	// 16x1 LCD: column - 1
+											// 16x2 LCD: column - 9
    }
 }
 
