@@ -20,12 +20,13 @@
 
 enum SM_STATES {SM1_SMStart, SM_Change} SM_STATE;
 unsigned char x[] = "CS120B is Legend... wait for it Dary!";
-unsigned char screen[37];
+unsigned char screen[16];
+unsigned char curr = 0x00;
 void Tick_LoHi() {
 	switch(SM_STATE)
 	{
 	   case SM1_SMStart:
-              if((~PINA & 0x01) == 0x01)
+              if ((~PINA & 0x01) == 0x01)
 	      {
 	         SM_STATE = SM_Change;
 	      }
@@ -46,10 +47,11 @@ void Tick_LoHi() {
 	   case SM1_SMStart:
 	      break;
 	   case SM_Change:
-	      for (unsigned int i = 0; i < 37; i++)
+	      for (unsigned int i = 0; i < 16; i++)
 	      {
-	         screen[i] = x[i];
+	         screen[i] = x[(i + curr) % 37];
 	      }
+	      curr = ((curr + 1) % 37);
 	      LCD_DisplayString(1, screen);
 	      break;
 	   default:
@@ -63,18 +65,18 @@ int main() {
 	DDRC = 0xF0; PORTC = 0x0F;
 	DDRD = 0xFF; PORTD = 0x00;
 
-	static task task1, task2, task3, task4;
-	task *tasks[] = { &task1, &task2, &task3, &task4 };
+	static task task1;
+	task *tasks[] = { &task1 };
 	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 
 	const char start = 0;
 
 	task1.state = start;
-	task1.period = 50;
+	task1.period = 100;
 	task1.elapsedTime = task1.period;
 	task1.TickFct = &Tick_LoHi;
 
-	TimerSet(50);
+	TimerSet(10);
 	TimerOn();
 
 	unsigned short i;
@@ -84,7 +86,7 @@ int main() {
 				tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
 				tasks[i]->elapsedTime = 0;
 			}
-			tasks[i]->elapsedTime += 50;
+			tasks[i]->elapsedTime += 10;
 		}
 		while (!TimerFlag);
 		TimerFlag = 0;
