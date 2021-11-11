@@ -100,6 +100,7 @@ void Tick_Keypad() {
 }
 
 enum SM2_STATES {SM2_SMStart, SM2_Change} SM2_STATE;
+unsigned char posX = 0x00;
 void Tick_LoHi() {
 	switch(SM2_STATE)
 	{
@@ -117,11 +118,20 @@ void Tick_LoHi() {
 	{
 	   case SM2_SMStart:
 	      LCD_ClearScreen();
+	      LCD_Cursor(1);
+	      posX++;
 	      break;
 	   case SM2_Change:
-	      LCD_Cursor(0);
 	      LCD_ClearScreen();
 	      LCD_WriteData(x);
+	      if (posX < 15)
+	      {
+	         posX++;
+	      }
+	      else
+	      {
+	         posX = 1;
+	      }
 	      break;
 	   default:
 	      break;
