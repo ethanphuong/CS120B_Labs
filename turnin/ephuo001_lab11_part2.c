@@ -1,14 +1,13 @@
 /*	Your Name & E-mail: Ethan Phuong ephuo001@ucr.edu
  *	Lab Section: 23
- *	Assignment: Lab 11  Exercise 2
+ *	Assignment: Lab 11  Exercise 3
  *	Exercise Description: [optional - include for your own benefit]
  *	
  *	I acknowledge all content contained herein, excluding template or example
  *	code, is my own original work.
  *
- *	Demo Link: https://youtu.be/hcDrZruIkJU
+ *	Demo Link: https://youtu.be/-DPRc_hKiYE
  */
-
 #include <avr/io.h>
 #include <keypad.h>
 #include <queue.h>
@@ -22,7 +21,7 @@
 enum SM_STATES {SM1_SMStart, SM_Change} SM_STATE;
 unsigned char x[] = "CS120B is Legend... wait for it Dary!";
 unsigned char screen[15];
-unsigned char posX = 0xa00;
+unsigned char posX = 0x00;
 void Tick_LoHi() {
 	switch(SM_STATE)
 	{
