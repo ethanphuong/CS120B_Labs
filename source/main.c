@@ -1,12 +1,12 @@
 /*	Your Name & E-mail: Ethan Phuong ephuo001@ucr.edu
  *	Lab Section: 23
- *	Assignment: Lab 11  Exercise 3
+ *	Assignment: Final Project
  *	Exercise Description: [optional - include for your own benefit]
  *	
  *	I acknowledge all content contained herein, excluding template or example
  *	code, is my own original work.
  *
- *	Demo Link: https://youtu.be/-DPRc_hKiYE
+ *	Demo Link: https://youtu.be/hHzz5gB_I1g
  */
 #include <avr/io.h>
 #ifdef _SIMULATE_
