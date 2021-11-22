@@ -73,38 +73,44 @@ void PWM_off() {
 	TCCR3B = 0x00;
 }
 
-enum LED_MATRIX_STATES {SM_LEDStart, SM_LEDOne, SM_LEDTwo} LED_STATE;
-void LEDMatrixSM() {
-	switch (LED_STATE) {
-		case SM_LEDStart:
-		   LED_STATE = SM_LEDOne;
-		   break;
-		case SM_LEDOne:
-		   LED_STATE = SM_LEDTwo;
-		   break;
-		case SM_LEDTwo:
-		   LED_STATE = SM_LEDOne;
-		   break;
-		default:
-		   LED_STATE = SM_LEDStart;
-		   break;
-	}
-	switch (LED_STATE) {
-		case SM_LEDStart:
-		   transmit_data_col(0x00);
-		   transmit_data_anti_row(0x00);
-		   break;
-		case SM_LEDOne:
-		   transmit_data_col(0x66);
-		   transmit_data_anti_row(0x3F);
-		   break;
-		case SM_LEDTwo:
-		   transmit_data_col(0x66);
-		   transmit_data_anti_row(0x9F);
-		   break;
-		default:
-		   break;
-	}
+enum SM_STATES {SM1_SMStart, SM_BitOne, SM_BitTwo, SM_BitThree} SM_STATE;
+void ThreeLEDsSM() {
+    switch (SM_STATE) {
+       case SM1_SMStart:
+          SM_STATE = SM_BitOne;
+	  break;
+       case SM_BitOne:
+	  SM_STATE = SM_BitTwo;
+	  break;
+       case SM_BitTwo:
+	  SM_STATE = SM_BitThree;
+	  break;
+       case SM_BitThree:
+	  SM_STATE = SM_BitOne;
+	  break;
+       default:
+	  SM_STATE = SM1_SMStart;
+	  break;
+    }
+    switch (SM_STATE) {
+       case SM1_SMStart:
+          break;
+       case SM_BitOne:
+	  PORTA = 0x01;
+	  //transmit_data_col(0x66);
+	  //transmit_data_anti_row(0x3F);
+          break;
+       case SM_BitTwo:
+	  PORTA = 0x02;
+	  //transmit_data_col(0x66);
+	  //transmit_data_anti_row(0x9F);
+          break;
+       case SM_BitThree:
+	  PORTA = 0x04;
+          break;
+       default:
+	  break;
+    }
 }
 
 void transmit_data_col(unsigned char data) {
@@ -130,16 +136,17 @@ void transmit_data_anti_row(unsigned char data) {
 }
 
 int main(void) {
+	DDRA = 0xFF; PORTA = 0x00;
 	DDRC = 0xFF; PORTC = 0x00;
 	DDRB = 0xFF; PORTB = 0x00;
 
 	TimerSet(1000);
 	TimerOn();
 
-	LED_STATE = SM_LEDStart;
+	SM_STATE = SM1_SMStart;
 
 	while(1) {
-		LEDMatrixSM();
+		ThreeLEDsSM();
 		while (!TimerFlag);
 		TimerFlag = 0;
 	}
