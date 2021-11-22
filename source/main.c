@@ -9,169 +9,137 @@
  *	Demo Link: https://youtu.be/-DPRc_hKiYE
  */
 #include <avr/io.h>
-#include <keypad.h>
-#include <queue.h>
-#include <scheduler.h>
-#include <stack.h>
-#include <timer.h>
 #ifdef _SIMULATE_
 #include "simAVRHeader.h"
 #endif
 
-enum SM1_STATES {SM1_SMStart, SM1_Change} SM1_STATE;
-unsigned char x;
-void Tick_Keypad() {
-	x = GetKeypadKey();
-	switch (SM1_STATE) {
-		case SM1_SMStart:
-		   SM1_STATE = SM1_Change;
+volatile unsigned char TimerFlag = 0;
+
+unsigned long _avr_timer_M = 1;
+unsigned long _avr_timer_cntcurr = 0;
+
+void TimerOn() {
+
+	TCCR1B = 0x0B;
+	OCR1A = 125;
+	TIMSK1 = 0x02;
+	TCNT1 = 0;
+	_avr_timer_cntcurr = _avr_timer_M;
+	SREG |= 0x80;
+}
+
+void TimerOff() {
+	TCCR1B = 0x00;
+}
+
+void TimerISR() {
+	TimerFlag = 1;
+}
+
+ISR(TIMER1_COMPA_vect) {
+	_avr_timer_cntcurr--;
+	if (_avr_timer_cntcurr == 0) {
+		TimerISR();
+		_avr_timer_cntcurr = _avr_timer_M;
+	}
+}
+
+void TimerSet(unsigned long M) {
+	_avr_timer_M = M;
+	_avr_timer_cntcurr = _avr_timer_M;
+}
+
+void set_PWM(double frequency) {
+	static double current_frequency;
+	if (frequency != current_frequency) {
+		if (!frequency) { TCCR3B &= 0x08; }
+		else { TCCR3B |= 0x03; }
+		if (frequency < 0.954) { OCR3A = 0xFFFF; }
+		else if (frequency > 31250) { OCR3A = 0x0000; }
+		else { OCR3A = (short) (8000000 / (128 * frequency)) -1; }
+		TCNT3 = 0;
+		current_frequency = frequency;
+	}
+}
+
+void PWM_on() {
+	TCCR3A = (1 << COM3A0);
+	TCCR3B = (1 << WGM32) | (1 << CS31) | (1 << CS30);
+	set_PWM(0);
+}
+
+void PWM_off() {
+	TCCR3A = 0x00;
+	TCCR3B = 0x00;
+}
+
+enum LED_MATRIX_STATES {SM_LEDStart, SM_LEDOne, SM_LEDTwo} LED_STATE;
+void LEDMatrixSM() {
+	switch (LED_STATE) {
+		case SM_LEDStart:
+		   LED_STATE = SM_LEDOne;
 		   break;
-		case SM1_Change:
-		   SM1_STATE = SM1_Change;
+		case SM_LEDOne:
+		   LED_STATE = SM_LEDTwo;
+		   break;
+		case SM_LEDTwo:
+		   LED_STATE = SM_LEDOne;
 		   break;
 		default:
-		   SM1_STATE = SM1_SMStart;
+		   LED_STATE = SM_LEDStart;
 		   break;
 	}
-	switch (SM1_STATE) {
-		case SM1_SMStart:
+	switch (LED_STATE) {
+		case SM_LEDStart:
+		   transmit_data_col(0x00);
+		   transmit_data_anti_row(0x00);
 		   break;
-		case SM1_Change:
-		   switch(x) {
-		      case '\0':
-		         PORTB = 0x1F;
-		         break;
-		      case '0':
-		         PORTB = 0x00;
-		         break;
-		      case '1':
-		         PORTB = 0x01;
-		         break;
-		      case '2':
-		         PORTB = 0x02;
-		         break;
-		      case '3':
-		         PORTB = 0x03;
-		         break;
-		      case '4':
-		         PORTB = 0x04;
-		         break;
-		      case '5':
-		         PORTB = 0x05;
-		         break;
-		      case '6':
-		         PORTB = 0x06;
-		         break;
-		      case '7':
-		         PORTB = 0x07;
-		         break;
-		      case '8':
-		         PORTB = 0x08;
-		         break;
-		      case '9':
-		         PORTB = 0x09;
-		         break;
-		      case 'A':
-		         PORTB = 0x0A;
-		         break;
-		      case 'B':
-		         PORTB = 0x0B;
-		         break;
-		      case 'C':
-		         PORTB = 0x0C;
-		         break;
-		      case 'D':
-		         PORTB = 0x0D;
-		         break;
-		      case '*':
-		         PORTB = 0x0E;
-		         break;
-		      case '#':
-		         PORTB = 0x0F;
-		         break;
-	 	      default:
-		         PORTB = 0x1B;
-		         break;
-		   }
+		case SM_LEDOne:
+		   transmit_data_col(0x66);
+		   transmit_data_anti_row(0x3F);
+		   break;
+		case SM_LEDTwo:
+		   transmit_data_col(0x66);
+		   transmit_data_anti_row(0x9F);
 		   break;
 		default:
 		   break;
 	}
 }
 
-enum SM2_STATES {SM2_SMStart, SM2_Change} SM2_STATE;
-unsigned char posX = 0x00;
-void Tick_LoHi() {
-	switch(SM2_STATE)
-	{
-	   case SM2_SMStart:
-	      SM2_STATE = SM2_Change;
-	      break;
-	   case SM2_Change:
-	      SM2_STATE = SM2_Change;
-	      break;
-	   default:
-	      SM2_STATE = SM2_SMStart;
-	      break;
+void transmit_data_col(unsigned char data) {
+	int i;
+	for (i = 0; i < 8; i++) {
+		PORTC = 0x08;
+		PORTC |= ((data >> i) & 0x01);
+		PORTC |= 0x02;
 	}
-	switch(SM2_STATE)
-	{
-	   case SM2_SMStart:
-	      LCD_ClearScreen();
-	      LCD_Cursor(1);
-	      posX++;
-	      break;
-	   case SM2_Change:
-	      LCD_ClearScreen();
-	      LCD_WriteData(x);
-	      if (posX < 15)
-	      {
-	         posX++;
-	      }
-	      else
-	      {
-	         posX = 1;
-	      }
-	      break;
-	   default:
-	      break;
-	}
+	PORTC |= 0x04;
+	PORTC = 0x00;
 }
 
-int main() {
-	DDRA = 0x00; PORTA = 0xFF;
+void transmit_data_anti_row(unsigned char data) {
+	int j;
+	for (j = 0; j < 8; j++) {
+		PORTB = 0x08;
+		PORTB |= ((data >> j) & 0x01);
+		PORTB |= 0x02;
+	}
+	PORTB |= 0x04;
+	PORTB = 0x00;
+}
+
+int main(void) {
+	DDRC = 0xFF; PORTC = 0x00;
 	DDRB = 0xFF; PORTB = 0x00;
-	DDRC = 0xF0; PORTC = 0x0F;
-	DDRD = 0xFF; PORTD = 0x00;
 
-	static task task1, task2;
-	task *tasks[] = { &task1, &task2 };
-	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
-
-	const char start = 0;
-
-	task1.state = start;
-	task1.period = 150;
-	task1.elapsedTime = task1.period;
-	task1.TickFct = &Tick_LoHi;
-
-	task2.state = start;
-	task2.period = 10;
-	task2.elapsedTime = task2.period;
-	task2.TickFct = &Tick_Keypad;
-
-	TimerSet(10);
+	TimerSet(1000);
 	TimerOn();
 
-	unsigned short i;
-	while (1) {
-		for ( i = 0; i < numTasks; i++) {
-			if ( tasks[i]->elapsedTime == tasks[i]->period ) {
-				tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
-				tasks[i]->elapsedTime = 0;
-			}
-			tasks[i]->elapsedTime += 10;
-		}
+	LED_STATE = SM_LEDStart;
+
+	while(1) {
+		LEDMatrixSM();
 		while (!TimerFlag);
 		TimerFlag = 0;
 	}
