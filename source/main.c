@@ -112,7 +112,7 @@ void ThreeLEDsSM() {
 }
 
 enum LED_MATRIX_STATES {LED_MATRIX_SMStart, LED_MATRIX_FirstBox, LED_MATRIX_SecondBox, LED_MATRIX_ThirdBox, LED_MATRIX_FourthBox, LED_MATRIX_FifthBox, LED_MATRIX_SixthBox, LED_MATRIX_SeventhBox,
-LED_MATRIX_FirstThreeBox, LED_MATRIX_SecondThreeBox} LED_MATRIX_STATE;
+LED_MATRIX_FirstThreeBox, LED_MATRIX_SecondThreeBox, LED_MATRIX_ThirdThreeBox, LED_MATRIX_FourthThreeBox, LED_MATRIX_FifthThreeBox, LED_MATRIX_SixthThreeBox, LED_MATRIX_SeventhThreeBox} LED_MATRIX_STATE;
 unsigned char blinkingLED = 0x00;
 void LED_MATRIX_SM() {
     switch (LED_MATRIX_STATE) {
@@ -162,6 +162,31 @@ void LED_MATRIX_SM() {
        case LED_MATRIX_SecondThreeBox:
 	  transmit_data_col(0xDB);
 	  transmit_data_anti_row(0x9F);
+	  LED_MATRIX_STATE = LED_MATRIX_ThirdThreeBox;
+	  break;
+       case LED_MATRIX_ThirdThreeBox:
+	  transmit_data_col(0xDB);
+	  transmit_data_anti_row(0xCF);
+	  LED_MATRIX_STATE = LED_MATRIX_FourthThreeBox;
+	  break;
+       case LED_MATRIX_FourthThreeBox:
+	  transmit_data_col(0xDB);
+	  transmit_data_anti_row(0xE7);
+	  LED_MATRIX_STATE = LED_MATRIX_FifthThreeBox;
+	  break;
+       case LED_MATRIX_FifthThreeBox:
+	  transmit_data_col(0xDB);
+	  transmit_data_anti_row(0xF3);
+	  LED_MATRIX_STATE = LED_MATRIX_SixthThreeBox;
+	  break;
+       case LED_MATRIX_SixthThreeBox:
+	  transmit_data_col(0xDB);
+	  transmit_data_anti_row(0xF9);
+	  LED_MATRIX_STATE = LED_MATRIX_SeventhThreeBox;
+	  break;
+       case LED_MATRIX_SeventhThreeBox:
+	  transmit_data_col(0xDB);
+	  transmit_data_anti_row(0xFC);
 	  LED_MATRIX_STATE = LED_MATRIX_FirstBox;
 	  break;
        default:
@@ -190,6 +215,16 @@ void LED_MATRIX_SM() {
        case LED_MATRIX_FirstThreeBox:
 	  break;
        case LED_MATRIX_SecondThreeBox:
+	  break;
+       case LED_MATRIX_ThirdThreeBox:
+	  break;
+       case LED_MATRIX_FourthThreeBox:
+	  break;
+       case LED_MATRIX_FifthThreeBox:
+	  break;
+       case LED_MATRIX_SixthThreeBox:
+	  break;
+       case LED_MATRIX_SeventhThreeBox:
 	  break;
        default:
 	  break;
@@ -247,7 +282,7 @@ void main() {
 	DDRB = 0xFF; PORTB = 0x00;
 	DDRC = 0xFF; PORTC = 0x00;
 
-	TimerSet(1000);
+	TimerSet(100);
 	TimerOn();
 
 	SM_STATE = SM1_SMStart;
