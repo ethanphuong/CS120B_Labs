@@ -113,13 +113,16 @@ void ThreeLEDsSM() {
 
 enum LED_MATRIX_STATES {LED_MATRIX_SMStart, LED_MATRIX_FirstBox, LED_MATRIX_SecondBox, LED_MATRIX_ThirdBox, LED_MATRIX_FourthBox, LED_MATRIX_FifthBox, LED_MATRIX_SixthBox, LED_MATRIX_SeventhBox,
 LED_MATRIX_FirstThreeBox, LED_MATRIX_SecondThreeBox, LED_MATRIX_ThirdThreeBox, LED_MATRIX_FourthThreeBox, LED_MATRIX_FifthThreeBox, LED_MATRIX_SixthThreeBox, LED_MATRIX_SeventhThreeBox,
-LED_MATRIX_FirstEdgeBox, LED_MATRIX_SecondEdgeBox, LED_MATRIX_ThirdEdgeBox, LED_MATRIX_FourthEdgeBox, LED_MATRIX_FifthEdgeBox, LED_MATRIX_SixthEdgeBox, LED_MATRIX_SeventhEdgeBox} LED_MATRIX_STATE;
+LED_MATRIX_FirstEdgeBox, LED_MATRIX_SecondEdgeBox, LED_MATRIX_ThirdEdgeBox, LED_MATRIX_FourthEdgeBox, LED_MATRIX_FifthEdgeBox, LED_MATRIX_SixthEdgeBox, LED_MATRIX_SeventhEdgeBox,
+LED_MATRIX_FirstCenterBox, LED_MATRIX_SecondCenterBox, LED_MATRIX_ThirdCenterBox, LED_MATRIX_FourthCenterBox, LED_MATRIX_FifthCenterBox, LED_MATRIX_SixthCenterBox, LED_MATRIX_SeventhCenterBox,
+LED_MATRIX_FirstSingleRightBox, LED_MATRIX_SecondSingleRightBox, LED_MATRIX_ThirdSingleRightBox, LED_MATRIX_FourthSingleRightBox, LED_MATRIX_FifthSingleRightBox, LED_MATRIX_SixthSingleRightBox, LED_MATRIX_SeventhSingleRightBox} LED_MATRIX_STATE;
 unsigned char blinkingLED = 0x00;
 void LED_MATRIX_SM() {
     switch (LED_MATRIX_STATE) {
        case LED_MATRIX_SMStart:
           LED_MATRIX_STATE = LED_MATRIX_FirstBox;
 	  break;
+       //start first pattern
        case LED_MATRIX_FirstBox:
 	  transmit_data_col(0x66);
 	  transmit_data_anti_row(0x3F);
@@ -155,6 +158,8 @@ void LED_MATRIX_SM() {
 	  transmit_data_anti_row(0xFC);
 	  LED_MATRIX_STATE = LED_MATRIX_FirstThreeBox;
 	  break;
+       //end first pattern
+       //start second pattern
        case LED_MATRIX_FirstThreeBox:
 	  transmit_data_col(0xDB);
 	  transmit_data_anti_row(0x3F);
@@ -190,7 +195,9 @@ void LED_MATRIX_SM() {
 	  transmit_data_anti_row(0xFC);
 	  LED_MATRIX_STATE = LED_MATRIX_FirstEdgeBox;
 	  break;
-	case LED_MATRIX_FirstEdgeBox:
+       //end second pattern
+       //start third pattern
+       case LED_MATRIX_FirstEdgeBox:
 	  transmit_data_col(0x7E);
 	  transmit_data_anti_row(0x3F);
 	  LED_MATRIX_STATE = LED_MATRIX_SecondEdgeBox;
@@ -223,8 +230,83 @@ void LED_MATRIX_SM() {
        case LED_MATRIX_SeventhEdgeBox:
 	  transmit_data_col(0x7E);
 	  transmit_data_anti_row(0xFC);
+	  LED_MATRIX_STATE = LED_MATRIX_FirstCenterBox;
+	  break;
+       //end third pattern
+       //start fourth pattern
+       case LED_MATRIX_FirstCenterBox:
+	  transmit_data_col(0xE7);
+	  transmit_data_anti_row(0x3F);
+	  LED_MATRIX_STATE = LED_MATRIX_SecondCenterBox;
+	  break;
+       case LED_MATRIX_SecondCenterBox:
+	  transmit_data_col(0xE7);
+	  transmit_data_anti_row(0x9F);
+	  LED_MATRIX_STATE = LED_MATRIX_ThirdCenterBox;
+	  break;
+       case LED_MATRIX_ThirdCenterBox:
+	  transmit_data_col(0xE7);
+	  transmit_data_anti_row(0xCF);
+	  LED_MATRIX_STATE = LED_MATRIX_FourthCenterBox;
+	  break;
+       case LED_MATRIX_FourthCenterBox:
+	  transmit_data_col(0xE7);
+	  transmit_data_anti_row(0xE7);
+	  LED_MATRIX_STATE = LED_MATRIX_FifthCenterBox;
+	  break;
+       case LED_MATRIX_FifthCenterBox:
+	  transmit_data_col(0xE7);
+	  transmit_data_anti_row(0xF3);
+	  LED_MATRIX_STATE = LED_MATRIX_SixthCenterBox;
+	  break;
+       case LED_MATRIX_SixthCenterBox:
+	  transmit_data_col(0xE7);
+	  transmit_data_anti_row(0xF9);
+	  LED_MATRIX_STATE = LED_MATRIX_SeventhCenterBox;
+	  break;
+       case LED_MATRIX_SeventhCenterBox:
+	  transmit_data_col(0xE7);
+	  transmit_data_anti_row(0xFC);
+	  LED_MATRIX_STATE = LED_MATRIX_FirstSingleRightBox;
+	  break;
+       //end fifth pattern
+       //start fifth pattern
+       case LED_MATRIX_FirstSingleRightBox:
+	  transmit_data_col(0xFB);
+	  transmit_data_anti_row(0x3F);
+	  LED_MATRIX_STATE = LED_MATRIX_SecondSingleRightBox;
+	  break;
+       case LED_MATRIX_SecondSingleRightBox:
+	  transmit_data_col(0xFB);
+	  transmit_data_anti_row(0x9F);
+	  LED_MATRIX_STATE = LED_MATRIX_ThirdSingleRightBox;
+	  break;
+       case LED_MATRIX_ThirdSingleRightBox:
+	  transmit_data_col(0xFB);
+	  transmit_data_anti_row(0xCF);
+	  LED_MATRIX_STATE = LED_MATRIX_FourthSingleRightBox;
+	  break;
+       case LED_MATRIX_FourthSingleRightBox:
+	  transmit_data_col(0xFB);
+	  transmit_data_anti_row(0xE7);
+	  LED_MATRIX_STATE = LED_MATRIX_FifthSingleRightBox;
+	  break;
+       case LED_MATRIX_FifthSingleRightBox:
+	  transmit_data_col(0xFB);
+	  transmit_data_anti_row(0xF3);
+	  LED_MATRIX_STATE = LED_MATRIX_SixthSingleRightBox;
+	  break;
+       case LED_MATRIX_SixthSingleRightBox:
+	  transmit_data_col(0xFB);
+	  transmit_data_anti_row(0xF9);
+	  LED_MATRIX_STATE = LED_MATRIX_SeventhSingleRightBox;
+	  break;
+       case LED_MATRIX_SeventhSingleRightBox:
+	  transmit_data_col(0xFB);
+	  transmit_data_anti_row(0xFC);
 	  LED_MATRIX_STATE = LED_MATRIX_FirstBox;
 	  break;
+       //end fifth pattern
        default:
 	  LED_MATRIX_STATE = LED_MATRIX_SMStart;
 	  break;
@@ -275,6 +357,34 @@ void LED_MATRIX_SM() {
        case LED_MATRIX_SixthEdgeBox:
 	  break;
        case LED_MATRIX_SeventhEdgeBox:
+	  break;
+       case LED_MATRIX_FirstCenterBox:
+	  break;
+       case LED_MATRIX_SecondCenterBox:
+	  break;
+       case LED_MATRIX_ThirdCenterBox:
+	  break;
+       case LED_MATRIX_FourthCenterBox:
+	  break;
+       case LED_MATRIX_FifthCenterBox:
+	  break;
+       case LED_MATRIX_SixthCenterBox:
+	  break;
+       case LED_MATRIX_SeventhCenterBox:
+	  break;
+       case LED_MATRIX_FirstSingleRightBox:
+	  break;
+       case LED_MATRIX_SecondSingleRightBox:
+	  break;
+       case LED_MATRIX_ThirdSingleRightBox:
+	  break;
+       case LED_MATRIX_FourthSingleRightBox:
+	  break;
+       case LED_MATRIX_FifthSingleRightBox:
+	  break;
+       case LED_MATRIX_SixthSingleRightBox:
+	  break;
+       case LED_MATRIX_SeventhSingleRightBox:
 	  break;
        default:
 	  break;
