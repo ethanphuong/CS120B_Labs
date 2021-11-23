@@ -9,6 +9,7 @@
  *	Demo Link: https://youtu.be/hHzz5gB_I1g
  */
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #ifdef _SIMULATE_
 #include "simAVRHeader.h"
 #endif
@@ -74,6 +75,7 @@ void PWM_off() {
 }
 
 enum SM_STATES {SM1_SMStart, SM_BitOne, SM_BitTwo, SM_BitThree} SM_STATE;
+unsigned char threeLEDs = 0x00;
 void ThreeLEDsSM() {
     switch (SM_STATE) {
        case SM1_SMStart:
@@ -96,17 +98,122 @@ void ThreeLEDsSM() {
        case SM1_SMStart:
           break;
        case SM_BitOne:
-	  PORTA = 0x01;
-	  //transmit_data_col(0x66);
-	  //transmit_data_anti_row(0x3F);
+	  threeLEDs = 0x80;
           break;
        case SM_BitTwo:
-	  PORTA = 0x02;
-	  //transmit_data_col(0x66);
-	  //transmit_data_anti_row(0x9F);
+	  threeLEDs = 0x40;
           break;
        case SM_BitThree:
-	  PORTA = 0x04;
+	  threeLEDs = 0x20;
+          break;
+       default:
+	  break;
+    }
+}
+
+enum LED_MATRIX_STATES {LED_MATRIX_SMStart, LED_MATRIX_FirstBox, LED_MATRIX_SecondBox, LED_MATRIX_ThirdBox, LED_MATRIX_FourthBox, LED_MATRIX_FifthBox, LED_MATRIX_SixthBox, LED_MATRIX_SeventhBox,
+LED_MATRIX_FirstThreeBox, LED_MATRIX_SecondThreeBox} LED_MATRIX_STATE;
+unsigned char blinkingLED = 0x00;
+void LED_MATRIX_SM() {
+    switch (LED_MATRIX_STATE) {
+       case LED_MATRIX_SMStart:
+          LED_MATRIX_STATE = LED_MATRIX_FirstBox;
+	  break;
+       case LED_MATRIX_FirstBox:
+	  transmit_data_col(0x66);
+	  transmit_data_anti_row(0x3F);
+	  LED_MATRIX_STATE = LED_MATRIX_SecondBox;
+	  break;
+       case LED_MATRIX_SecondBox:
+	  transmit_data_col(0x66);
+	  transmit_data_anti_row(0x9F);
+	  LED_MATRIX_STATE = LED_MATRIX_ThirdBox;
+	  break;
+       case LED_MATRIX_ThirdBox:
+	  transmit_data_col(0x66);
+	  transmit_data_anti_row(0xCF);
+	  LED_MATRIX_STATE = LED_MATRIX_FourthBox;
+	  break;
+       case LED_MATRIX_FourthBox:
+	  transmit_data_col(0x66);
+	  transmit_data_anti_row(0xE7);
+	  LED_MATRIX_STATE = LED_MATRIX_FifthBox;
+	  break;
+       case LED_MATRIX_FifthBox:
+	  transmit_data_col(0x66);
+	  transmit_data_anti_row(0xF3);
+	  LED_MATRIX_STATE = LED_MATRIX_SixthBox;
+	  break;
+       case LED_MATRIX_SixthBox:
+	  transmit_data_col(0x66);
+	  transmit_data_anti_row(0xF9);
+	  LED_MATRIX_STATE = LED_MATRIX_SeventhBox;
+	  break;
+       case LED_MATRIX_SeventhBox:
+	  transmit_data_col(0x66);
+	  transmit_data_anti_row(0xFC);
+	  LED_MATRIX_STATE = LED_MATRIX_FirstThreeBox;
+	  break;
+       case LED_MATRIX_FirstThreeBox:
+	  transmit_data_col(0xDB);
+	  transmit_data_anti_row(0x3F);
+	  LED_MATRIX_STATE = LED_MATRIX_SecondThreeBox;
+	  break;
+       case LED_MATRIX_SecondThreeBox:
+	  transmit_data_col(0xDB);
+	  transmit_data_anti_row(0x9F);
+	  LED_MATRIX_STATE = LED_MATRIX_FirstBox;
+	  break;
+       default:
+	  LED_MATRIX_STATE = LED_MATRIX_SMStart;
+	  break;
+    }
+    switch (LED_MATRIX_STATE) {
+       case LED_MATRIX_SMStart:
+          break;
+       case LED_MATRIX_FirstBox:
+	  blinkingLED = 0x10;
+          break;
+       case LED_MATRIX_SecondBox:
+	  blinkingLED = 0x00;
+          break;
+       case LED_MATRIX_ThirdBox:
+	  break;
+       case LED_MATRIX_FourthBox:
+	  break;
+       case LED_MATRIX_FifthBox:
+	  break;
+       case LED_MATRIX_SixthBox:
+	  break;
+       case LED_MATRIX_SeventhBox:
+	  break;
+       case LED_MATRIX_FirstThreeBox:
+	  break;
+       case LED_MATRIX_SecondThreeBox:
+	  break;
+       default:
+	  break;
+    }
+}
+
+enum SM3_STATES {SM3_SMStart, SM3_SMOn} SM3_STATE;
+void CombineLEDsSM() {
+    switch (SM3_STATE) {
+       case SM3_SMStart:
+          SM3_STATE = SM3_SMOn;
+	  break;
+       case SM3_SMOn:
+	  SM3_STATE = SM3_SMOn;
+	  break;
+       default:
+	  SM3_STATE = SM3_SMStart;
+	  break;
+    }
+    switch (SM3_STATE) {
+       case SM3_SMStart:
+          break;
+       case SM3_SMOn:
+	  PORTC = (threeLEDs | blinkingLED);
           break;
        default:
 	  break;
@@ -135,20 +242,23 @@ void transmit_data_anti_row(unsigned char data) {
 	PORTB = 0x00;
 }
 
-int main(void) {
-	DDRA = 0xFF; PORTA = 0x00;
-	DDRC = 0xFF; PORTC = 0x00;
+void main() {
+	
 	DDRB = 0xFF; PORTB = 0x00;
+	DDRC = 0xFF; PORTC = 0x00;
 
 	TimerSet(1000);
 	TimerOn();
 
 	SM_STATE = SM1_SMStart;
+	LED_MATRIX_STATE = LED_MATRIX_SMStart;
+	SM3_STATE = SM3_SMStart;
 
 	while(1) {
 		ThreeLEDsSM();
-		while (!TimerFlag);
+		LED_MATRIX_SM();
+		CombineLEDsSM();
+		while (!TimerFlag);	
 		TimerFlag = 0;
 	}
-	return 0;
 }
