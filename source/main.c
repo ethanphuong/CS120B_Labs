@@ -14,6 +14,9 @@
 #ifdef _SIMULATE_
 #include "simAVRHeader.h"
 #include "timer.h"
+#ifndef F_CPU
+#define F_CPU 16000000UL
+#endif
 #endif
 
 void set_PWM(double frequency) {
@@ -39,6 +42,100 @@ void PWM_off() {
 	TCCR3A = 0x00;
 	TCCR3B = 0x00;
 }
+
+void InitADC(void)
+{
+    ADMUX|=(1<<REFS0);    
+    ADCSRA|=(1<<ADEN)|(1<<ADPS0)|(1<<ADPS1)|(1<<ADPS2); 
+}
+
+enum JOYSTICK_STATES {JOYSTICK_SMStart, JOYSTICK_Init, JOYSTICK_On} JOYSTICK_STATE;
+unsigned char horizontalMovement = 0x00;
+unsigned char verticalMovement = 0x00;
+unsigned char horizontalMid = 0x8D;
+unsigned char verticalMid = 0x97;
+unsigned char joystickMove = 0x00;
+unsigned char origin = 0x10;
+void JOYSTICK_SM() {
+    switch (JOYSTICK_STATE) {
+       case JOYSTICK_SMStart:
+          JOYSTICK_STATE = JOYSTICK_Init;
+	  break;
+       case JOYSTICK_Init:
+	  JOYSTICK_STATE = JOYSTICK_On;
+	  break;
+       case JOYSTICK_On:
+	  JOYSTICK_STATE = JOYSTICK_On;
+	  break;
+       default:
+	  JOYSTICK_STATE = JOYSTICK_SMStart;
+	  break;
+    }
+    switch (JOYSTICK_STATE) {
+       case JOYSTICK_SMStart:
+          break;
+       case JOYSTICK_Init:
+          switch (ADMUX) {
+          case 0x40:
+          {
+             ADCSRA |=(1<<ADSC);
+ 	     while ( !(ADCSRA & (1<<ADIF)));
+             horizontalMovement = ADC;
+             ADC = 0;
+             ADMUX = 0x41;
+             break;
+          }
+          case 0x41:
+          {
+             ADCSRA |=(1<<ADSC);
+ 	     while ( !(ADCSRA & (1<<ADIF)));
+             verticalMovement = ADC;
+             ADC = 0;
+             ADMUX = 0x40;
+             break;
+          }
+       }
+          break;
+       case JOYSTICK_On:
+          if (horizontalMovement < (horizontalMid - 50)) {
+	     transmit_data_col(origin);
+	     transmit_data_anti_row(0xFE);
+	     joystickMove |= (1<<PINB3);
+	     _delay_ms(5);
+             joystickMove = 0x00;
+	  }
+	  if ((~PINA & 0x01) == 0x01) {
+	     transmit_data_col(origin / 2);
+	     if (origin > 0x01)
+	     {
+	     	origin = origin / 2;
+	     }
+	     transmit_data_anti_row(0xFE);
+	     joystickMove |= (1<<PINB2);
+	     _delay_ms(5);
+             joystickMove = 0x00;
+	  }
+	  if (verticalMovement < (verticalMid - 50)) {
+	     joystickMove |= (1<<PINB1);
+	     _delay_ms(5);
+             joystickMove = 0x00;
+	  }
+ 	  if ((~PINA & 0x02) == 0x02) {
+	     transmit_data_col(origin * 2);
+	     if (origin < 0x80)
+	     {
+	     	origin = origin * 2;
+	     }
+	     joystickMove |= (1<<PINB0);
+	     _delay_ms(5);
+             joystickMove = 0x00;
+	  }
+          break;
+       default:
+	  break;
+    }
+}
+
 
 enum SM_STATES {SM1_SMStart, SM_BitOne, SM_BitTwo, SM_BitThree} SM_STATE;
 unsigned char threeLEDs = 0x00;
@@ -430,7 +527,7 @@ void CombineLEDsSM() {
        case SM3_SMStart:
           break;
        case SM3_SMOn:
-	  PORTC = (threeLEDs | blinkingLED);
+	  PORTC = (threeLEDs | blinkingLED) | joystickMove;
           break;
        default:
 	  break;
@@ -465,14 +562,16 @@ void main() {
 	DDRB = 0xFF; PORTB = 0x00;
 	DDRC = 0xFF; PORTC = 0x00;
 
-	TimerSet(100);
+	TimerSet(1000);
 	TimerOn();
 
+	JOYSTICK_STATE = JOYSTICK_SMStart;
 	SM_STATE = SM1_SMStart;
 	LED_MATRIX_STATE = LED_MATRIX_SMStart;
 	SM3_STATE = SM3_SMStart;
 
 	while(1) {
+		JOYSTICK_SM();
 		ThreeLEDsSM();
 		LED_MATRIX_SM();
 		CombineLEDsSM();
