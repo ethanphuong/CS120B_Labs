@@ -19,6 +19,14 @@
 #endif
 #endif
 
+unsigned char horizontalMovement = 0x00;
+unsigned char verticalMovement = 0x00;
+unsigned char horizontalMid = 0x8D;
+unsigned char verticalMid = 0x97;
+unsigned char joystickMove = 0x00;
+unsigned char origin = 0x10;
+unsigned difficulty = 0x00;
+
 void set_PWM(double frequency) {
 	static double current_frequency;
 	if (frequency != current_frequency) {
@@ -49,130 +57,77 @@ void InitADC(void)
     ADCSRA|=(1<<ADEN)|(1<<ADPS0)|(1<<ADPS1)|(1<<ADPS2); 
 }
 
-enum JOYSTICK_STATES {JOYSTICK_SMStart, JOYSTICK_Init, JOYSTICK_On} JOYSTICK_STATE;
-unsigned char horizontalMovement = 0x00;
-unsigned char verticalMovement = 0x00;
-unsigned char horizontalMid = 0x8D;
-unsigned char verticalMid = 0x97;
-unsigned char joystickMove = 0x00;
-unsigned char origin = 0x10;
-void JOYSTICK_SM() {
-    switch (JOYSTICK_STATE) {
-       case JOYSTICK_SMStart:
-          JOYSTICK_STATE = JOYSTICK_Init;
+enum MOTION_STATES {MOTION_SMStart, MOTION_On, MOTION_Off} MOTION_STATE;
+void MOTION_SM() {
+    switch (MOTION_STATE) {
+       case MOTION_SMStart:
+	  MOTION_STATE = MOTION_On;
 	  break;
-       case JOYSTICK_Init:
-	  JOYSTICK_STATE = JOYSTICK_On;
+       case MOTION_On:
+	  if ((~PINA & 0x10) == 0x10)
+	  {
+	     TimerSet(500);
+	     difficulty = 0x00;
+	  }
+	  if ((~PINA & 0x08) == 0x08)
+	  {
+	     if (difficulty == 0x00)
+	     {
+		TimerSet(400);
+		difficulty++;
+	        MOTION_STATE = MOTION_Off;
+	     }
+	     else if (difficulty == 0x01)
+	     {
+		TimerSet(300);
+		difficulty++;
+	        MOTION_STATE = MOTION_Off;
+	     }
+	     else if (difficulty == 0x02)
+	     {
+		TimerSet(200);
+		difficulty++;
+	        MOTION_STATE = MOTION_Off;
+	     }
+	     else if (difficulty == 0x03)
+	     {
+		TimerSet(100);
+		difficulty++;
+	        MOTION_STATE = MOTION_Off;
+	     }
+	     else
+	     {
+		TimerSet(100);
+	        MOTION_STATE = MOTION_Off;
+	     }
+	  }
 	  break;
-       case JOYSTICK_On:
-	  JOYSTICK_STATE = JOYSTICK_On;
+       case MOTION_Off:
+	  if ((~PINA & 0x10) == 0x10)
+	  {
+	     TimerSet(500);
+	     difficulty = 0x00;
+	  }
+	  if ((~PINA & 0x08) != 0x08)
+	  {
+	     MOTION_STATE = MOTION_On;
+	  }
 	  break;
        default:
-	  JOYSTICK_STATE = JOYSTICK_SMStart;
 	  break;
     }
-    switch (JOYSTICK_STATE) {
-       case JOYSTICK_SMStart:
-          break;
-       case JOYSTICK_Init:
-          switch (ADMUX) {
-          case 0x40:
-          {
-             ADCSRA |=(1<<ADSC);
- 	     while ( !(ADCSRA & (1<<ADIF)));
-             horizontalMovement = ADC;
-             ADC = 0;
-             ADMUX = 0x41;
-             break;
-          }
-          case 0x41:
-          {
-             ADCSRA |=(1<<ADSC);
- 	     while ( !(ADCSRA & (1<<ADIF)));
-             verticalMovement = ADC;
-             ADC = 0;
-             ADMUX = 0x40;
-             break;
-          }
-       }
-          break;
-       case JOYSTICK_On:
-          if (horizontalMovement < (horizontalMid - 50)) {
-	     transmit_data_col(origin);
-	     transmit_data_anti_row(0xFE);
-	     joystickMove |= (1<<PINB3);
-	     _delay_ms(5);
-             joystickMove = 0x00;
-	  }
-	  if ((~PINA & 0x01) == 0x01) {
-	     transmit_data_col(origin / 2);
-	     if (origin > 0x01)
-	     {
-	     	origin = origin / 2;
-	     }
-	     transmit_data_anti_row(0xFE);
-	     joystickMove |= (1<<PINB2);
-	     _delay_ms(5);
-             joystickMove = 0x00;
-	  }
-	  if (verticalMovement < (verticalMid - 50)) {
-	     joystickMove |= (1<<PINB1);
-	     _delay_ms(5);
-             joystickMove = 0x00;
-	  }
- 	  if ((~PINA & 0x02) == 0x02) {
-	     transmit_data_col(origin * 2);
-	     if (origin < 0x80)
-	     {
-	     	origin = origin * 2;
-	     }
-	     joystickMove |= (1<<PINB0);
-	     _delay_ms(5);
-             joystickMove = 0x00;
-	  }
+    switch (MOTION_STATE) {
+       case MOTION_SMStart:
+	  break;
+       case MOTION_On:
+	  break;
+       case MOTION_Off:
           break;
        default:
 	  break;
     }
 }
-
-
-enum SM_STATES {SM1_SMStart, SM_BitOne, SM_BitTwo, SM_BitThree} SM_STATE;
-unsigned char threeLEDs = 0x00;
-void ThreeLEDsSM() {
-    switch (SM_STATE) {
-       case SM1_SMStart:
-          SM_STATE = SM_BitOne;
-	  break;
-       case SM_BitOne:
-	  SM_STATE = SM_BitTwo;
-	  break;
-       case SM_BitTwo:
-	  SM_STATE = SM_BitThree;
-	  break;
-       case SM_BitThree:
-	  SM_STATE = SM_BitOne;
-	  break;
-       default:
-	  SM_STATE = SM1_SMStart;
-	  break;
-    }
-    switch (SM_STATE) {
-       case SM1_SMStart:
-          break;
-       case SM_BitOne:
-	  threeLEDs = 0x80;
-          break;
-       case SM_BitTwo:
-	  threeLEDs = 0x40;
-          break;
-       case SM_BitThree:
-	  threeLEDs = 0x20;
-          break;
-       default:
-	  break;
-    }
-}
+	     
 
 enum LED_MATRIX_STATES {LED_MATRIX_SMStart, LED_MATRIX_FirstBox, LED_MATRIX_SecondBox, LED_MATRIX_ThirdBox, LED_MATRIX_FourthBox, LED_MATRIX_FifthBox, LED_MATRIX_SixthBox, LED_MATRIX_SeventhBox,
 LED_MATRIX_FirstThreeBox, LED_MATRIX_SecondThreeBox, LED_MATRIX_ThirdThreeBox, LED_MATRIX_FourthThreeBox, LED_MATRIX_FifthThreeBox, LED_MATRIX_SixthThreeBox, LED_MATRIX_SeventhThreeBox,
@@ -180,44 +135,51 @@ LED_MATRIX_FirstEdgeBox, LED_MATRIX_SecondEdgeBox, LED_MATRIX_ThirdEdgeBox, LED_
 LED_MATRIX_FirstCenterBox, LED_MATRIX_SecondCenterBox, LED_MATRIX_ThirdCenterBox, LED_MATRIX_FourthCenterBox, LED_MATRIX_FifthCenterBox, LED_MATRIX_SixthCenterBox, LED_MATRIX_SeventhCenterBox,
 LED_MATRIX_FirstSingleRightBox, LED_MATRIX_SecondSingleRightBox, LED_MATRIX_ThirdSingleRightBox, LED_MATRIX_FourthSingleRightBox, LED_MATRIX_FifthSingleRightBox, LED_MATRIX_SixthSingleRightBox, LED_MATRIX_SeventhSingleRightBox,
 LED_MATRIX_FirstSingleLeftBox, LED_MATRIX_SecondSingleLeftBox, LED_MATRIX_ThirdSingleLeftBox, LED_MATRIX_FourthSingleLeftBox, LED_MATRIX_FifthSingleLeftBox, LED_MATRIX_SixthSingleLeftBox, LED_MATRIX_SeventhSingleLeftBox} LED_MATRIX_STATE;
-unsigned char blinkingLED = 0x00;
 void LED_MATRIX_SM() {
     switch (LED_MATRIX_STATE) {
        case LED_MATRIX_SMStart:
+	  JOYSTICK();
           LED_MATRIX_STATE = LED_MATRIX_FirstBox;
 	  break;
        //start first pattern
        case LED_MATRIX_FirstBox:
+	  JOYSTICK();
 	  transmit_data_col(0x66);
 	  transmit_data_anti_row(0x3F);
 	  LED_MATRIX_STATE = LED_MATRIX_SecondBox;
 	  break;
        case LED_MATRIX_SecondBox:
+	  JOYSTICK();
 	  transmit_data_col(0x66);
 	  transmit_data_anti_row(0x9F);
 	  LED_MATRIX_STATE = LED_MATRIX_ThirdBox;
 	  break;
        case LED_MATRIX_ThirdBox:
+	  JOYSTICK();
 	  transmit_data_col(0x66);
 	  transmit_data_anti_row(0xCF);
 	  LED_MATRIX_STATE = LED_MATRIX_FourthBox;
 	  break;
        case LED_MATRIX_FourthBox:
+	  JOYSTICK();
 	  transmit_data_col(0x66);
 	  transmit_data_anti_row(0xE7);
 	  LED_MATRIX_STATE = LED_MATRIX_FifthBox;
 	  break;
        case LED_MATRIX_FifthBox:
+	  JOYSTICK();
 	  transmit_data_col(0x66);
 	  transmit_data_anti_row(0xF3);
 	  LED_MATRIX_STATE = LED_MATRIX_SixthBox;
 	  break;
        case LED_MATRIX_SixthBox:
+	  JOYSTICK();
 	  transmit_data_col(0x66);
 	  transmit_data_anti_row(0xF9);
 	  LED_MATRIX_STATE = LED_MATRIX_SeventhBox;
 	  break;
        case LED_MATRIX_SeventhBox:
+	  JOYSTICK();
 	  transmit_data_col(0x66);
 	  transmit_data_anti_row(0xFC);
 	  LED_MATRIX_STATE = LED_MATRIX_FirstThreeBox;
@@ -225,36 +187,43 @@ void LED_MATRIX_SM() {
        //end first pattern
        //start second pattern
        case LED_MATRIX_FirstThreeBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDB);
 	  transmit_data_anti_row(0x3F);
 	  LED_MATRIX_STATE = LED_MATRIX_SecondThreeBox;
 	  break;
        case LED_MATRIX_SecondThreeBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDB);
 	  transmit_data_anti_row(0x9F);
 	  LED_MATRIX_STATE = LED_MATRIX_ThirdThreeBox;
 	  break;
        case LED_MATRIX_ThirdThreeBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDB);
 	  transmit_data_anti_row(0xCF);
 	  LED_MATRIX_STATE = LED_MATRIX_FourthThreeBox;
 	  break;
        case LED_MATRIX_FourthThreeBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDB);
 	  transmit_data_anti_row(0xE7);
 	  LED_MATRIX_STATE = LED_MATRIX_FifthThreeBox;
 	  break;
        case LED_MATRIX_FifthThreeBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDB);
 	  transmit_data_anti_row(0xF3);
 	  LED_MATRIX_STATE = LED_MATRIX_SixthThreeBox;
 	  break;
        case LED_MATRIX_SixthThreeBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDB);
 	  transmit_data_anti_row(0xF9);
 	  LED_MATRIX_STATE = LED_MATRIX_SeventhThreeBox;
 	  break;
        case LED_MATRIX_SeventhThreeBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDB);
 	  transmit_data_anti_row(0xFC);
 	  LED_MATRIX_STATE = LED_MATRIX_FirstEdgeBox;
@@ -262,36 +231,43 @@ void LED_MATRIX_SM() {
        //end second pattern
        //start third pattern
        case LED_MATRIX_FirstEdgeBox:
+	  JOYSTICK();
 	  transmit_data_col(0x7E);
 	  transmit_data_anti_row(0x3F);
 	  LED_MATRIX_STATE = LED_MATRIX_SecondEdgeBox;
 	  break;
        case LED_MATRIX_SecondEdgeBox:
+	  JOYSTICK();
 	  transmit_data_col(0x7E);
 	  transmit_data_anti_row(0x9F);
 	  LED_MATRIX_STATE = LED_MATRIX_ThirdEdgeBox;
 	  break;
        case LED_MATRIX_ThirdEdgeBox:
+	  JOYSTICK();
 	  transmit_data_col(0x7E);
 	  transmit_data_anti_row(0xCF);
 	  LED_MATRIX_STATE = LED_MATRIX_FourthEdgeBox;
 	  break;
        case LED_MATRIX_FourthEdgeBox:
+	  JOYSTICK();
 	  transmit_data_col(0x7E);
 	  transmit_data_anti_row(0xE7);
 	  LED_MATRIX_STATE = LED_MATRIX_FifthEdgeBox;
 	  break;
        case LED_MATRIX_FifthEdgeBox:
+	  JOYSTICK();
 	  transmit_data_col(0x7E);
 	  transmit_data_anti_row(0xF3);
 	  LED_MATRIX_STATE = LED_MATRIX_SixthEdgeBox;
 	  break;
        case LED_MATRIX_SixthEdgeBox:
+	  JOYSTICK();
 	  transmit_data_col(0x7E);
 	  transmit_data_anti_row(0xF9);
 	  LED_MATRIX_STATE = LED_MATRIX_SeventhEdgeBox;
 	  break;
        case LED_MATRIX_SeventhEdgeBox:
+	  JOYSTICK();
 	  transmit_data_col(0x7E);
 	  transmit_data_anti_row(0xFC);
 	  LED_MATRIX_STATE = LED_MATRIX_FirstCenterBox;
@@ -299,36 +275,43 @@ void LED_MATRIX_SM() {
        //end third pattern
        //start fourth pattern
        case LED_MATRIX_FirstCenterBox:
+	  JOYSTICK();
 	  transmit_data_col(0xE7);
 	  transmit_data_anti_row(0x3F);
 	  LED_MATRIX_STATE = LED_MATRIX_SecondCenterBox;
 	  break;
        case LED_MATRIX_SecondCenterBox:
+	  JOYSTICK();
 	  transmit_data_col(0xE7);
 	  transmit_data_anti_row(0x9F);
 	  LED_MATRIX_STATE = LED_MATRIX_ThirdCenterBox;
 	  break;
        case LED_MATRIX_ThirdCenterBox:
+	  JOYSTICK();
 	  transmit_data_col(0xE7);
 	  transmit_data_anti_row(0xCF);
 	  LED_MATRIX_STATE = LED_MATRIX_FourthCenterBox;
 	  break;
        case LED_MATRIX_FourthCenterBox:
+	  JOYSTICK();
 	  transmit_data_col(0xE7);
 	  transmit_data_anti_row(0xE7);
 	  LED_MATRIX_STATE = LED_MATRIX_FifthCenterBox;
 	  break;
        case LED_MATRIX_FifthCenterBox:
+	  JOYSTICK();
 	  transmit_data_col(0xE7);
 	  transmit_data_anti_row(0xF3);
 	  LED_MATRIX_STATE = LED_MATRIX_SixthCenterBox;
 	  break;
        case LED_MATRIX_SixthCenterBox:
+	  JOYSTICK();
 	  transmit_data_col(0xE7);
 	  transmit_data_anti_row(0xF9);
 	  LED_MATRIX_STATE = LED_MATRIX_SeventhCenterBox;
 	  break;
        case LED_MATRIX_SeventhCenterBox:
+	  JOYSTICK();
 	  transmit_data_col(0xE7);
 	  transmit_data_anti_row(0xFC);
 	  LED_MATRIX_STATE = LED_MATRIX_FirstSingleRightBox;
@@ -336,36 +319,43 @@ void LED_MATRIX_SM() {
        //end fifth pattern
        //start fifth pattern
        case LED_MATRIX_FirstSingleRightBox:
+	  JOYSTICK();
 	  transmit_data_col(0xFB);
 	  transmit_data_anti_row(0x3F);
 	  LED_MATRIX_STATE = LED_MATRIX_SecondSingleRightBox;
 	  break;
        case LED_MATRIX_SecondSingleRightBox:
+	  JOYSTICK();
 	  transmit_data_col(0xFB);
 	  transmit_data_anti_row(0x9F);
 	  LED_MATRIX_STATE = LED_MATRIX_ThirdSingleRightBox;
 	  break;
        case LED_MATRIX_ThirdSingleRightBox:
+	  JOYSTICK();
 	  transmit_data_col(0xFB);
 	  transmit_data_anti_row(0xCF);
 	  LED_MATRIX_STATE = LED_MATRIX_FourthSingleRightBox;
 	  break;
        case LED_MATRIX_FourthSingleRightBox:
+	  JOYSTICK();
 	  transmit_data_col(0xFB);
 	  transmit_data_anti_row(0xE7);
 	  LED_MATRIX_STATE = LED_MATRIX_FifthSingleRightBox;
 	  break;
        case LED_MATRIX_FifthSingleRightBox:
+	  JOYSTICK();
 	  transmit_data_col(0xFB);
 	  transmit_data_anti_row(0xF3);
 	  LED_MATRIX_STATE = LED_MATRIX_SixthSingleRightBox;
 	  break;
        case LED_MATRIX_SixthSingleRightBox:
+	  JOYSTICK();
 	  transmit_data_col(0xFB);
 	  transmit_data_anti_row(0xF9);
 	  LED_MATRIX_STATE = LED_MATRIX_SeventhSingleRightBox;
 	  break;
        case LED_MATRIX_SeventhSingleRightBox:
+	  JOYSTICK();
 	  transmit_data_col(0xFB);
 	  transmit_data_anti_row(0xFC);
 	  LED_MATRIX_STATE = LED_MATRIX_FirstSingleLeftBox;
@@ -373,36 +363,43 @@ void LED_MATRIX_SM() {
        //end fifth pattern
        //start sixth pattern
        case LED_MATRIX_FirstSingleLeftBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDF);
 	  transmit_data_anti_row(0x3F);
 	  LED_MATRIX_STATE = LED_MATRIX_SecondSingleLeftBox;
 	  break;
        case LED_MATRIX_SecondSingleLeftBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDF);
 	  transmit_data_anti_row(0x9F);
 	  LED_MATRIX_STATE = LED_MATRIX_ThirdSingleLeftBox;
 	  break;
        case LED_MATRIX_ThirdSingleLeftBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDF);
 	  transmit_data_anti_row(0xCF);
 	  LED_MATRIX_STATE = LED_MATRIX_FourthSingleLeftBox;
 	  break;
        case LED_MATRIX_FourthSingleLeftBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDF);
 	  transmit_data_anti_row(0xE7);
 	  LED_MATRIX_STATE = LED_MATRIX_FifthSingleLeftBox;
 	  break;
        case LED_MATRIX_FifthSingleLeftBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDF);
 	  transmit_data_anti_row(0xF3);
 	  LED_MATRIX_STATE = LED_MATRIX_SixthSingleLeftBox;
 	  break;
        case LED_MATRIX_SixthSingleLeftBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDF);
 	  transmit_data_anti_row(0xF9);
 	  LED_MATRIX_STATE = LED_MATRIX_SeventhSingleLeftBox;
 	  break;
        case LED_MATRIX_SeventhSingleLeftBox:
+	  JOYSTICK();
 	  transmit_data_col(0xDF);
 	  transmit_data_anti_row(0xFC);
 	  LED_MATRIX_STATE = LED_MATRIX_FirstBox;
@@ -510,29 +507,29 @@ void LED_MATRIX_SM() {
     }
 }
 
-enum SM3_STATES {SM3_SMStart, SM3_SMOn} SM3_STATE;
-void CombineLEDsSM() {
-    switch (SM3_STATE) {
-       case SM3_SMStart:
-          SM3_STATE = SM3_SMOn;
-	  break;
-       case SM3_SMOn:
-	  SM3_STATE = SM3_SMOn;
-	  break;
-       default:
-	  SM3_STATE = SM3_SMStart;
-	  break;
-    }
-    switch (SM3_STATE) {
-       case SM3_SMStart:
-          break;
-       case SM3_SMOn:
-	  PORTC = (threeLEDs | blinkingLED) | joystickMove;
-          break;
-       default:
-	  break;
-    }
-}
+//enum SM3_STATES {SM3_SMStart, SM3_SMOn} SM3_STATE;
+//void CombineLEDsSM() {
+    //switch (SM3_STATE) {
+       //case SM3_SMStart:
+          //SM3_STATE = SM3_SMOn;
+	  //break;
+       //case SM3_SMOn:
+	  //SM3_STATE = SM3_SMOn;
+	  //break;
+       //default:
+	  //SM3_STATE = SM3_SMStart;
+	 // break;
+    //}
+    //switch (SM3_STATE) {
+       //case SM3_SMStart:
+          //break;
+       //case SM3_SMOn:
+	  //PORTC = joystickMove;
+          //break;
+       //default:
+	  //break;
+    //}
+//}
 
 void transmit_data_col(unsigned char data) {
 	int i;
@@ -556,25 +553,80 @@ void transmit_data_anti_row(unsigned char data) {
 	PORTB = 0x00;
 }
 
+void JOYSTICK() {
+	switch (ADMUX) {
+          case 0x40:
+          {
+             ADCSRA |=(1<<ADSC);
+ 	     while ( !(ADCSRA & (1<<ADIF)));
+             horizontalMovement = ADC;
+             ADC = 0;
+             ADMUX = 0x41;
+             break;
+          }
+          case 0x41:
+          {
+             ADCSRA |=(1<<ADSC);
+ 	     while ( !(ADCSRA & (1<<ADIF)));
+             verticalMovement = ADC;
+             ADC = 0;
+             ADMUX = 0x40;
+             break;
+          }
+       }
+          if (horizontalMovement < (horizontalMid - 50)) {
+	     transmit_data_col(origin);
+	     transmit_data_anti_row(0xFE);
+	     joystickMove |= (1<<PINA3);
+	     _delay_ms(5);
+             //joystickMove = 0x00;
+	  }
+	  if ((~PINA & 0x01) == 0x01) {
+	     transmit_data_col(origin / 2);
+	     if (origin > 0x01)
+	     {
+	     	origin = origin / 2;
+	     }
+	     transmit_data_anti_row(0xFE);
+	     joystickMove |= (1<<PINA2);
+	     _delay_ms(5);
+             //joystickMove = 0x00;
+	  }
+	  if (verticalMovement < (verticalMid - 50)) {
+	     joystickMove |= (1<<PINA1);
+	     _delay_ms(5);
+             //joystickMove = 0x00;
+	  }
+ 	  if ((~PINA & 0x02) == 0x02) {
+	     transmit_data_col(origin * 2);
+	     if (origin < 0x80)
+	     {
+	     	origin = origin * 2;
+	     }
+	     joystickMove |= (1<<PINA0);
+	     _delay_ms(5);
+             //joystickMove = 0x00;
+	  }
+}
+
 void main() {
 	
 	DDRA = 0x00; PORTA = 0xFF;
 	DDRB = 0xFF; PORTB = 0x00;
 	DDRC = 0xFF; PORTC = 0x00;
 
-	TimerSet(1000);
+	TimerSet(500);
 	TimerOn();
+	InitADC();
 
-	JOYSTICK_STATE = JOYSTICK_SMStart;
-	SM_STATE = SM1_SMStart;
 	LED_MATRIX_STATE = LED_MATRIX_SMStart;
-	SM3_STATE = SM3_SMStart;
+	//SM3_STATE = SM3_SMStart;
 
 	while(1) {
-		JOYSTICK_SM();
-		ThreeLEDsSM();
 		LED_MATRIX_SM();
-		CombineLEDsSM();
+		MOTION_SM();
+		//JOYSTICK();
+		//CombineLEDsSM();
 		while (!TimerFlag);	
 		TimerFlag = 0;
 	}
