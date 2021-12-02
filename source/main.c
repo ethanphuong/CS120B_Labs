@@ -25,7 +25,11 @@ unsigned char horizontalMid = 0x8D;
 unsigned char verticalMid = 0x97;
 unsigned char joystickMove = 0x00;
 unsigned char origin = 0x10;
-unsigned difficulty = 0x00;
+unsigned char difficulty = 0x00;
+unsigned char score = 0x00;
+unsigned char delay = 0x00;
+unsigned char maxDelay = 0x28;
+unsigned char prevScore = 0x00;
 
 void set_PWM(double frequency) {
 	static double current_frequency;
@@ -57,6 +61,58 @@ void InitADC(void)
     ADCSRA|=(1<<ADEN)|(1<<ADPS0)|(1<<ADPS1)|(1<<ADPS2); 
 }
 
+enum SCORE_STATES {SCORE_SMStart, SCORE_On} SCORE_STATE;
+void SCORE_SM() {
+    switch (SCORE_STATE) {
+       case SCORE_SMStart:
+	  SCORE_STATE = SCORE_On;
+	  break;
+       case SCORE_On:
+	  LCD_ClearScreen();
+	  LCD_WriteData(score + '0');
+	  LCD_WriteData(prevScore + '0');
+	  SCORE_STATE = SCORE_On;
+	  break;
+       default:
+	  SCORE_STATE = SCORE_SMStart;
+	  break;
+       }
+    switch (SCORE_STATE) {
+       case SCORE_SMStart:
+	  break;
+       case SCORE_On:
+	  delay++;
+	  if (difficulty == 0x01)
+	  {
+	     maxDelay = 0x32;
+	  }
+	  else if (difficulty == 0x02)
+	  {
+	     maxDelay = 0x43;
+	  }
+	  else if (difficulty == 0x03)
+	  {
+	     maxDelay = 0x64;
+	  }
+	  else if (difficulty == 0x04)
+	  {
+	     maxDelay = 0xC8;
+	  }
+	  if (delay == maxDelay)
+          {
+	     delay = 0;
+	     if (score == 0x09)
+	     {
+	     	score = 0;
+	     }
+	     score++;
+	  }
+	  break;
+       default:
+	  break;
+    }
+}	  
+
 enum MOTION_STATES {MOTION_SMStart, MOTION_On, MOTION_Off} MOTION_STATE;
 void MOTION_SM() {
     switch (MOTION_STATE) {
@@ -71,28 +127,25 @@ void MOTION_SM() {
 	  }
 	  if ((~PINA & 0x08) == 0x08)
 	  {
-	     if (difficulty == 0x00)
+	     difficulty++;
+	     if (difficulty == 0x01)
 	     {
 		TimerSet(400);
-		difficulty++;
-	        MOTION_STATE = MOTION_Off;
-	     }
-	     else if (difficulty == 0x01)
-	     {
-		TimerSet(300);
-		difficulty++;
 	        MOTION_STATE = MOTION_Off;
 	     }
 	     else if (difficulty == 0x02)
 	     {
-		TimerSet(200);
-		difficulty++;
+		TimerSet(300);
 	        MOTION_STATE = MOTION_Off;
 	     }
 	     else if (difficulty == 0x03)
 	     {
+		TimerSet(200);
+	        MOTION_STATE = MOTION_Off;
+	     }
+	     else if (difficulty == 0x04)
+	     {
 		TimerSet(100);
-		difficulty++;
 	        MOTION_STATE = MOTION_Off;
 	     }
 	     else
@@ -107,6 +160,8 @@ void MOTION_SM() {
 	  {
 	     TimerSet(500);
 	     difficulty = 0x00;
+	     prevScore = score;
+	     score = 0x00;
 	  }
 	  if ((~PINA & 0x08) != 0x08)
 	  {
@@ -114,6 +169,7 @@ void MOTION_SM() {
 	  }
 	  break;
        default:
+	  MOTION_STATE = MOTION_SMStart;
 	  break;
     }
     switch (MOTION_STATE) {
@@ -614,17 +670,22 @@ void main() {
 	DDRA = 0x00; PORTA = 0xFF;
 	DDRB = 0xFF; PORTB = 0x00;
 	DDRC = 0xFF; PORTC = 0x00;
+	DDRD = 0xFF; PORTD = 0x00;
 
 	TimerSet(500);
 	TimerOn();
 	InitADC();
+	LCD_init();
 
 	LED_MATRIX_STATE = LED_MATRIX_SMStart;
+	MOTION_STATE = MOTION_SMStart;
+	SCORE_STATE = SCORE_SMStart;
 	//SM3_STATE = SM3_SMStart;
 
 	while(1) {
 		LED_MATRIX_SM();
 		MOTION_SM();
+		SCORE_SM();
 		//JOYSTICK();
 		//CombineLEDsSM();
 		while (!TimerFlag);	
