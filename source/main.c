@@ -482,7 +482,7 @@ void LED_MATRIX_SM() {
        case LED_MATRIX_SixthBox:
 	  break;
        case LED_MATRIX_SeventhBox:
-	  if (!((origin == 0x10) || (origin == 0x08) || (origin == 0x01)))
+	  if (!((origin == 0x80) || (origin == 0x10) || (origin == 0x08) || (origin == 0x01)))
 	  {
 	     TimerSet(500);
 	     difficulty = 0x00;
@@ -504,6 +504,13 @@ void LED_MATRIX_SM() {
        case LED_MATRIX_SixthThreeBox:
 	  break;
        case LED_MATRIX_SeventhThreeBox:
+	  if (!((origin == 0x04) || (origin == 0x20)))
+	  {
+	     TimerSet(500);
+	     difficulty = 0x00;
+	     prevScore = score;
+	     score = 0x00;
+	  }
 	  break;
        //third
        case LED_MATRIX_FirstEdgeBox:
@@ -519,6 +526,13 @@ void LED_MATRIX_SM() {
        case LED_MATRIX_SixthEdgeBox:
 	  break;
        case LED_MATRIX_SeventhEdgeBox:
+	  if (!((origin == 0x80) || (origin == 0x01)))
+	  {
+	     TimerSet(500);
+	     difficulty = 0x00;
+	     prevScore = score;
+	     score = 0x00;
+	  }
 	  break;
        //fourth
        case LED_MATRIX_FirstCenterBox:
@@ -534,6 +548,13 @@ void LED_MATRIX_SM() {
        case LED_MATRIX_SixthCenterBox:
 	  break;
        case LED_MATRIX_SeventhCenterBox:
+	  if (!((origin == 0x08) || (origin == 0x10)))
+	  {
+	     TimerSet(500);
+	     difficulty = 0x00;
+	     prevScore = score;
+	     score = 0x00;
+	  }
 	  break;
        //fifth
        case LED_MATRIX_FirstSingleRightBox:
@@ -549,6 +570,13 @@ void LED_MATRIX_SM() {
        case LED_MATRIX_SixthSingleRightBox:
 	  break;
        case LED_MATRIX_SeventhSingleRightBox:
+	  if (!(origin == 0x04))
+	  {
+	     TimerSet(500);
+	     difficulty = 0x00;
+	     prevScore = score;
+	     score = 0x00;
+	  }
 	  break;
        //sixth
        case LED_MATRIX_FirstSingleLeftBox:
@@ -564,6 +592,13 @@ void LED_MATRIX_SM() {
        case LED_MATRIX_SixthSingleLeftBox:
 	  break;
        case LED_MATRIX_SeventhSingleLeftBox:
+	  if (!(origin == 0x20))
+	  {
+	     TimerSet(500);
+	     difficulty = 0x00;
+	     prevScore = score;
+	     score = 0x00;
+	  }
 	  break;
        default:
 	  break;
