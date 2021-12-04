@@ -156,7 +156,7 @@ void MOTION_SM() {
 	  }
 	  break;
        case MOTION_Off:
-	  if ((~PINA & 0x10) == 0x10)
+	  if ((~PINA & 0x04) == 0x04)
 	  {
 	     TimerSet(500);
 	     difficulty = 0x00;
@@ -482,6 +482,13 @@ void LED_MATRIX_SM() {
        case LED_MATRIX_SixthBox:
 	  break;
        case LED_MATRIX_SeventhBox:
+	  if (!((origin == 0x10) || (origin == 0x08) || (origin == 0x01)))
+	  {
+	     TimerSet(500);
+	     difficulty = 0x00;
+	     prevScore = score;
+	     score = 0x00;
+	  }
 	  break;
        //second
        case LED_MATRIX_FirstThreeBox:
