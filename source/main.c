@@ -605,30 +605,6 @@ void LED_MATRIX_SM() {
     }
 }
 
-//enum SM3_STATES {SM3_SMStart, SM3_SMOn} SM3_STATE;
-//void CombineLEDsSM() {
-    //switch (SM3_STATE) {
-       //case SM3_SMStart:
-          //SM3_STATE = SM3_SMOn;
-	  //break;
-       //case SM3_SMOn:
-	  //SM3_STATE = SM3_SMOn;
-	  //break;
-       //default:
-	  //SM3_STATE = SM3_SMStart;
-	 // break;
-    //}
-    //switch (SM3_STATE) {
-       //case SM3_SMStart:
-          //break;
-       //case SM3_SMOn:
-	  //PORTC = joystickMove;
-          //break;
-       //default:
-	  //break;
-    //}
-//}
-
 void transmit_data_col(unsigned char data) {
 	int i;
 	for (i = 0; i < 8; i++) {
@@ -677,7 +653,6 @@ void JOYSTICK() {
 	     transmit_data_anti_row(0xFE);
 	     joystickMove |= (1<<PINA3);
 	     _delay_ms(5);
-             //joystickMove = 0x00;
 	  }
 	  if ((~PINA & 0x01) == 0x01) {
 	     transmit_data_col(origin / 2);
@@ -688,12 +663,10 @@ void JOYSTICK() {
 	     transmit_data_anti_row(0xFE);
 	     joystickMove |= (1<<PINA2);
 	     _delay_ms(5);
-             //joystickMove = 0x00;
 	  }
 	  if (verticalMovement < (verticalMid - 50)) {
 	     joystickMove |= (1<<PINA1);
 	     _delay_ms(5);
-             //joystickMove = 0x00;
 	  }
  	  if ((~PINA & 0x02) == 0x02) {
 	     transmit_data_col(origin * 2);
@@ -701,9 +674,9 @@ void JOYSTICK() {
 	     {
 	     	origin = origin * 2;
 	     }
+	     transmit_data_anti_row(0xFE);
 	     joystickMove |= (1<<PINA0);
 	     _delay_ms(5);
-             //joystickMove = 0x00;
 	  }
 }
 
@@ -728,8 +701,6 @@ void main() {
 		LED_MATRIX_SM();
 		MOTION_SM();
 		SCORE_SM();
-		//JOYSTICK();
-		//CombineLEDsSM();
 		while (!TimerFlag);	
 		TimerFlag = 0;
 	}
